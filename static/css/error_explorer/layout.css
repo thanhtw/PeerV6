@@ -1,0 +1,218 @@
+/* Category Section Styles */
+.category-section {
+    margin: 2rem 0 1rem 0;
+}
+
+.category-title {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-count {
+    font-size: 0.8em;
+    color: #7f8c8d;
+    font-weight: normal;
+}
+
+/* No Results Styles */
+.no-results {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+}
+
+.no-results-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Search and Filter Container */
+.search-filter-container {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border: 1px solid #dee2e6;
+}
+
+/* View Toggle Buttons */
+.view-toggle-section {
+    margin-bottom: 1.5rem;
+}
+
+.results-count {
+    color: #6c757d;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Filter Controls Responsive */
+@media (max-width: 1024px) {
+    .search-filter-container {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .category-title {
+        font-size: 1.1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .error-count {
+        font-size: 0.75em;
+    }
+    
+    .no-results {
+        padding: 2rem 1rem;
+    }
+    
+    .no-results-icon {
+        font-size: 3rem;
+    }
+}
+
+/* Grid Layout for Error Cards */
+.error-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* List View Styles */
+.error-list-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.error-list-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-list-header {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.error-list-content {
+    padding: 1.5rem;
+}
+
+/* Tabs Enhancement */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 0.5rem;
+}
+
+.stTabs [data-baseweb="tab"] {
+    padding: 0.5rem 1rem;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Code Example Styles */
+.code-example {
+    margin: 1rem 0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.code-example.error-code {
+    border-left: 4px solid #e74c3c;
+    background-color: #fdf2f2;
+}
+
+.code-example.correct-code {
+    border-left: 4px solid #27ae60;
+    background-color: #f2f9f2;
+}
+
+.code-example pre {
+    margin: 0 !important;
+    padding: 1rem !important;
+    background: transparent !important;
+}
+
+/* Error Card Enhancement */
+.error-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.error-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.error-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin: 0.25rem 0.5rem 0.25rem 0;
+}
+
+.error-badge.easy {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.error-badge.medium {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.error-badge.hard {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Example Section Enhancements */
+.example-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.example-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.example-icon.wrong {
+    background-color: #e74c3c;
+}
+
+.example-icon.correct {
+    background-color: #27ae60;
+}

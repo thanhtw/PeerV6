@@ -1,0 +1,125 @@
+/* static/css/animations.css */
+
+/* Level Up Animation Styles */
+.level-up-container {
+    position: relative;
+    height: 200px;
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column; /* Stack text elements vertically */
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: background 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Professional font */
+}
+
+.level-up-container.initial {
+    background: linear-gradient(135deg, #f0f4f8, #d9e2ec); /* Softer, more professional initial background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.level-up-container.final {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9); /* Softer green gradient for final state */
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.6); /* Enhanced green glow */
+}
+
+.level-up-text-wrapper {
+    /* Centering is handled by flex on parent */
+}
+
+.level-up-title {
+    font-size: 1.6rem; /* Slightly increased */
+    margin-bottom: 8px;
+    color: #4caf50; /* Consistent green accent */
+    font-weight: 500;
+}
+
+.level-up-levels {
+    font-size: 2.8rem; /* Slightly increased */
+    font-weight: bold;
+    color: #2e7d32; /* Darker, richer green */
+    margin-bottom: 15px; /* Space before next message if any */
+}
+
+.level-up-congrats {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+    color: #4caf50;
+    font-weight: 500;
+}
+
+.level-up-reached {
+    font-size: 2.8rem;
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.level-up-unlocked-message {
+    margin-top: 10px; /* Reduced from 20px for more compact design */
+}
+
+.level-up-unlocked-text {
+    padding: 10px 18px; /* Increased padding for better appearance */
+    background-color: #a5d6a7;
+    border-radius: 8px; /* Softer corners */
+    font-weight: 600; /* Bolder */
+    color: #1b5e20;
+    display: inline-block;
+    border: 1px solid #81c784;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+/* Firework Animation */
+.firework-particle {
+    position: absolute;
+    font-size: 2.2rem; /* Slightly larger particles */
+    animation: firework-animation 0.8s ease-out forwards;
+    opacity: 0;
+    will-change: transform, opacity; /* Performance hint */
+}
+
+@keyframes firework-animation {
+    0% {
+        transform: scale(0.3) rotate(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        transform: scale(1.3) rotate(15deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.7) rotate(-5deg);
+        opacity: 0;
+    }
+}
+
+/* Text Pop Animation */
+.level-up-text-pop {
+    animation: text-pop 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; /* Smoother easing */
+    opacity: 0; /* Start hidden, animation brings it in */
+    will-change: transform, opacity;
+}
+
+@keyframes text-pop {
+    0% {
+        transform: translateY(20px) scale(0.9);
+        opacity: 0;
+    }
+    60% {
+        transform: translateY(-5px) scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Individual elements can have delays for staggered animation */
+.delay-1 { animation-delay: 0.1s !important; }
+.delay-2 { animation-delay: 0.2s !important; }
+.delay-3 { animation-delay: 0.3s !important; }
+.delay-4 { animation-delay: 0.4s !important; }
