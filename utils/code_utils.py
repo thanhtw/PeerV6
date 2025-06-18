@@ -494,8 +494,7 @@ def create_feedback_prompt(review_analysis: Dict[str, Any], iteration: int = 1,
         logger.error(f"Error creating feedback prompt: {str(e)}")
         return ""
 
-def create_comparison_report_prompt(review_analysis: Dict[str, Any],
-                                   review_history: List = None) -> str:
+def create_comparison_report_prompt(review_analysis: Dict[str, Any]) -> str:
     """
     Create a prompt for generating a comparison report.
     
@@ -507,10 +506,12 @@ def create_comparison_report_prompt(review_analysis: Dict[str, Any],
         Comparison report prompt string
     """
     try:
+        print(f"\nreview_analysis of ------------------- {review_analysis}")
+
         prompt_template = get_prompt_template_instance()
         prompt = prompt_template.create_comparison_report_prompt_template(
             total_problems=review_analysis.get(t("total_problems"), 0),
-            identified=review_analysis.get(t("identified_count"), 0),
+            identified_count=review_analysis.get(t("identified_count"), 0),
             accuracy=review_analysis.get(t("identified_percentage"), 0),
             missed_count=len(review_analysis.get(t("missed_problems"),0)),
             identified_text=review_analysis.get(t("identified_problems"), 0),

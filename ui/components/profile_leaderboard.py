@@ -183,7 +183,7 @@ class ProfileLeaderboardSidebar:
                 
                 # Current user styling
                 current_class = "current-user-enhanced" if is_current else ""
-                current_indicator = '<span class="current-user-indicator-enhanced">(You)</span>' if is_current else ""
+                current_indicator = f'<span class="current-user-indicator-enhanced">({t("you")})</span>' if is_current else ""
                 
                 # Build individual item HTML - FIXED: Display total_points
                 user_name_parts = [

@@ -479,7 +479,7 @@ class StudentResponseEvaluator:
                 return ""
                 
             # Create the prompt for the LLM
-            prompt = create_comparison_report_prompt(evaluation_errors, review_analysis, review_history)
+            prompt = create_comparison_report_prompt(review_analysis)
             
             # Generate the report with the LLM
             response = self.llm.invoke(prompt)

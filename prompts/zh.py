@@ -331,8 +331,7 @@ class PromptTemplate:
         accuracy: float,
         missed_count: int,
         identified_text: str,
-        missed_text: str,
-        progress_info: str        
+        missed_text: str        
     ) -> str:
         """Function-based template for comparison report prompt."""
         # Use format() for complex templates with JSON
@@ -348,8 +347,6 @@ class PromptTemplate:
 
     遺漏的問題：
     {missed_text}
-
-    {progress_info}
 
     任務：
     創建一個教育性的 JSON 報告，幫助學生提高他們的 Java 程式碼評審技能。
@@ -422,10 +419,10 @@ class PromptTemplate:
         accuracy=accuracy,
         missed_count=missed_count,
         identified_text=identified_text,
-        missed_text=missed_text,
-        progress_info=progress_info
+        missed_text=missed_text        
     )
-
+        print("\n based prompt",base_prompt)
+        
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:
             return f"{language_instructions}\n\n{base_prompt}"

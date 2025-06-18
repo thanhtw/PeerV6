@@ -1379,7 +1379,7 @@ class TutorialUI:
                     time_spent_seconds=int(generation_duration)
                 )
             
-            st.success("✅ Practice challenge ready!")
+            st.success(f"✅ {t('practice_challenge_ready')}!")
             
             time.sleep(1)
             st.rerun()
