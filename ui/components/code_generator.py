@@ -116,15 +116,15 @@ class CodeGeneratorUI:
                 self.code_display_ui.render_code_display(state.code_snippet)
                 
                 # Regenerate option
-                st.markdown("""
+                st.markdown(f"""
                 <div class="regenerate-section">
-                    <h4>🔄 Not satisfied with the result?</h4>
-                    <p>Generate a new code snippet with the same configuration</p>
+                    <h4>🔄 {t('not_satisfied_with_the_result')}</h4>
+                    <p>{t('generate_a_new_code_snippet_with_the_same_configuration')}</p>
                 </div>
                 """, unsafe_allow_html=True)
                 
                 # FIXED: Remove on_click callback
-                if st.button("🔄 Generate New Problem", key="regenerate", use_container_width=True):
+                if st.button(f"🔄 {t('generate_new')}", key="regenerate", use_container_width=True):
                     self._handle_code_generation_with_tracking()
 
     def _render_configuration_section(self, user_level: str):
@@ -663,11 +663,11 @@ class CodeGeneratorUI:
                 
                 # Show appropriate message
                 if has_error:
-                    st.warning(f"⚠️ Code generated with warnings: {error}")
-                    st.info("✅ Code generation completed. Switching to review tab...")
+                    st.warning(f"⚠️ {t('code_generated_with_warnings')}: {error}")
+                    st.info(f"✅ {t('code_generation_completed_switching_to_review_tab...')}")
                 else:
-                    st.success("✅ Code generated successfully! Switching to review tab...")
-                
+                    st.success(f"✅ {t('code_generated_successfully_switching_to_review_tab...')}")
+
                 # FIXED: Use session state manager for safe transition
                 from utils.session_state_manager import session_state_manager
                 session_state_manager.handle_tab_transition_after_generation()

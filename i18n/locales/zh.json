@@ -958,7 +958,13 @@
     "current": "當前",
     "iterations": "迭代",
     "iteration_count": "迭代次數",
-    "you": "您"
-    
+    "you": "您",
+    "not_satisfied_with_the_result": "對結果不滿意",
+    "generate_a_new_code_snippet_with_the_same_configuration": "使用相同配置生成新的程式碼片段",
+
+    "code_generated_with_warnings": "程式碼生成時出現警告",
+    "code_generation_completed_switching_to_review_tab...": "程式碼生成已完成，正在切換到審查標籤...",
+    "code_generated_successfully_switching_to_review_tab...": "程式碼生成成功！正在切換到審查標籤..."
+
   }
 }
