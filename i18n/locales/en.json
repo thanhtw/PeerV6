@@ -833,6 +833,15 @@
     "analyzing_your_review":"Analyzing Your Review",
     "practice_status": "Practice Status",
     "practiced_errors": "Practiced Errors",
+
+    "practice_count": "Practice Count",
+    "total_attempts": "Total Attempts",
+    "successful_completions": "Successful Completions",
+    "best_accuracy": "Best Accuracy",
+    "last_practiced": "Last Practiced",
+    
+
+
     "unpracticed_errors": "Unpracticed Errors", 
     "completed_errors": "Completed Errors",
     "mastered_errors": "Mastered Errors",
@@ -912,6 +921,9 @@
     "missed_problems": "Missed Problems",
     "error_type": "Error Type",
     "error_name": "Error Name",
+    "error_code": "Error Code",
+    "warning_signs": "Warning Signs",
+    "practice_stats": "Practice Statistics",
     "line_number": "Line Number",
     "code_segment": "Code Segment",
     "explanation": "Explanation",

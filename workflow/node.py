@@ -585,7 +585,7 @@ class WorkflowNodes:
                 if isinstance(raw_errors, dict) and "java_errors" in raw_errors:
                     for error in raw_errors["java_errors"]:
                         if isinstance(error, dict):
-                            error_name = error.get(t('error_name_variable'), error.get('name', ''))
+                            error_name = error.get(t('error_name'), error.get('name', ''))
                             category = error.get(t('category'), error.get('type', ''))
                             description = error.get(t('description'), '')
                             known_problems.append(f"{category} - {error_name}: {description}")

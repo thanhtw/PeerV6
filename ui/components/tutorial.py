@@ -75,10 +75,11 @@ class TutorialUI:
             
     def _render_practice_mode(self):
         """Render the enhanced professional practice mode interface."""
-        practice_error = st.session_state.get("practice_error_data", {})        
-        error_name = practice_error.get("error_name", t("unknown_error"))        
-        difficulty = practice_error.get("difficulty_level", "medium")
-        category = practice_error.get("category", "")
+        practice_error = st.session_state.get("practice_error_data", {})    
+        #print(f"\nPractice error data: {practice_error}")    
+        error_name = practice_error.get(t("error_name"), t("unknown_error"))        
+        difficulty = practice_error.get(t("difficulty_level"), "medium")
+        category = practice_error.get(t("category"), "")
         
         # Professional practice mode header with enhanced styling
         self._render_professional_practice_header(error_name, difficulty, category)
@@ -324,7 +325,7 @@ class TutorialUI:
             practice_stats = {}
             if user_id:
                 practice_data = self.practice_tracker.get_user_practice_data(user_id)
-                practice_stats = practice_data.get('practice_stats', {})
+                practice_stats = practice_data.get(t('practice_stats'), {})
                 
 
         except Exception as e:
@@ -350,7 +351,7 @@ class TutorialUI:
                         <div class="stat-label-compact">{t('categories')}</div>
                     </div>                   
                     <div class="stat-card-enhanced success">
-                        <div class="stat-number-enhanced">{practice_stats.get('total_practiced', 0)}</div>
+                        <div class="stat-number-enhanced">{practice_stats.get(t('total_practiced'), 0)}</div>
                         <div class="stat-label-enhanced">{t('practiced')}</div>
                     </div>                                     
                 </div>
@@ -412,88 +413,71 @@ class TutorialUI:
         st.session_state.selected_difficulty = selected_difficulty
         st.session_state.selected_practice = selected_practice
 
-    def _render_error_content(self, user_id: str):
-        """Render the main error content with professional cards."""
-        
-        practice_data = {}
-        if user_id:
-            practice_data = self.practice_tracker.get_user_practice_data(user_id)
-        
-        filtered_errors = self._get_filtered_errors(practice_data)
-        
-        if not filtered_errors:
-            self._render_no_results()
-            return
-        
-        # Render professional error cards - iterate through each error
-        for error in filtered_errors:
-            self._render_error_card(error)
-
     def _get_filtered_errors(self, practice_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get errors filtered by search, category, difficulty, and practice status."""
         try:
             selected_practice = st.session_state.get('selected_practice', t('all_errors'))
             
             if selected_practice == t('practiced_errors'):
-                errors = practice_data.get('practiced_errors', [])
+                errors = practice_data.get(t('practiced_errors'), [])
                 # Convert to expected format
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        'error_code': error['error_code'],
-                        t("error_name_variable"): error['error_name_en'],
-                        t("description"): '',  # Will be fetched from repository
-                        'difficulty_level': error['difficulty_level'],
-                        'category': error['category_name_en'],
-                        'practice_stats': error  # This includes the practice stats
+                        t('error_code'): error['error_code'],
+                        t("error_name"): error['error_name'],
+                        t("description"): error['description'],  # Will be fetched from repository
+                        t('difficulty_level'): error['difficulty_level'],
+                        t('category'): error['category'],
+                        t('practice_stats'): error  # This includes the practice stats
                     })
                 return self._apply_standard_filters(formatted_errors)
                 
             elif selected_practice == t('unpracticed_errors'):
-                errors = practice_data.get('unpracticed_errors', [])
+                errors = practice_data.get(t('unpracticed_errors'), [])
                 # Convert to expected format
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        'error_code': error['error_code'],
-                        t("error_name_variable"): error['error_name_en'],
-                        t("description"): error['description_en'],
-                        t("implementation_guide"): error['implementation_guide_en'],
-                        'difficulty_level': error['difficulty_level'],
-                        'category': error['category_name_en'],
-                        'practice_stats': None  # No practice stats for unpracticed
+                        t('error_code'): error['error_code'],
+                        t("error_name"): error['error_name'],
+                        t("description"): error['description'],
+                        t("implementation_guide"): error['implementation_guide'],
+                        t('difficulty_level'): error['difficulty_level'],
+                        t('category'): error['category'],
+                        t('practice_stats'): None  # No practice stats for unpracticed
                     })
                 return self._apply_standard_filters(formatted_errors)
                 
             elif selected_practice == t('completed_errors'):
-                errors = [e for e in practice_data.get('practiced_errors', []) 
-                        if e['completion_status'] in ['completed', 'mastered']]
+                errors = [e for e in practice_data.get(t('practiced_errors'), []) 
+                        if e[t('completion_status')] in ['completed', 'mastered']]
                 # Convert and filter
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        'error_code': error['error_code'],
-                        t("error_name_variable"): error['error_name_en'],
-                        t("description"): '',
-                        'difficulty_level': error['difficulty_level'],
-                        'category': error['category_name_en'],
-                        'practice_stats': error  # This includes the practice stats
+                        t('error_code'): error['error_code'],
+                        t("error_name"): error['error_name'],
+                        t("description"): error['description'],
+                        t('difficulty_level'): error['difficulty_level'],
+                        t('category'): error['category'],
+                        t('practice_stats'): error  # This includes the practice stats
                     })
                 return self._apply_standard_filters(formatted_errors)
                 
             elif selected_practice == t('mastered_errors'):
-                errors = [e for e in practice_data.get('practiced_errors', []) 
-                        if e['completion_status'] == 'mastered']
+                errors = [e for e in practice_data.get(t('practiced_errors'), []) 
+                        if e[t('completion_status')] == 'mastered']
                 # Convert and filter
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        'error_code': error['error_code'],
-                        t("error_name_variable"): error['error_name_en'],
-                        t("description"): '',
-                        'difficulty_level': error['difficulty_level'],
-                        'category': error['category_name_en'],
-                        'practice_stats': error  # This includes the practice stats
+                        t('error_code'): error['error_code'],
+                        t("error_name"): error['error_name'],
+                        t("description"):error['description'],
+                        t('difficulty_level'): error['difficulty_level'],
+                        t('category'): error['category'],
+                        t('practice_stats'): error  # This includes the practice stats
                     })
                 return self._apply_standard_filters(formatted_errors)
             
@@ -517,17 +501,15 @@ class TutorialUI:
             
             # Create a lookup dictionary for practiced errors by error_code and name
             practiced_errors_lookup = {}
-            for practiced_error in practice_data.get('practiced_errors', []):
-                error_code = practiced_error.get('error_code')
-                error_name_en = practiced_error.get('error_name_en')
-                error_name_zh = practiced_error.get('error_name_zh')
-                
+            for practiced_error in practice_data.get(t('practiced_errors'), []):
+                error_code = practiced_error.get(t('error_code'))
+                error_name = practiced_error.get(t('error_name'))              
+
                 if error_code:
                     practiced_errors_lookup[error_code] = practiced_error
-                if error_name_en:
-                    practiced_errors_lookup[error_name_en] = practiced_error
-                if error_name_zh:
-                    practiced_errors_lookup[error_name_zh] = practiced_error
+                if error_name:
+                    practiced_errors_lookup[error_name] = practiced_error
+               
             
             # Get all errors organized by category
             all_errors = []
@@ -538,25 +520,23 @@ class TutorialUI:
                 category_errors_with_practice = []
                 for error in category_errors:
                     # Get error identifiers
-                    error_name = error.get(t("error_name_variable"), "")
-                    error_code = error.get('error_code', '')
+                    error_name = error.get(t("error_name"), "")
+                    error_code = error.get(t('error_code'), '')
                     
                     # Find practice stats
                     practice_stats = None
-                    if error_code and error_code in practiced_errors_lookup:
-                        practice_stats = practiced_errors_lookup[error_code]
-                    elif error_name and error_name in practiced_errors_lookup:
+                    if error_code and error_name in practiced_errors_lookup:
                         practice_stats = practiced_errors_lookup[error_name]
-                    
+
                     # Create enhanced error with all necessary data
                     enhanced_error = {
-                        'error_code': error_code or f"gen_{hash(error_name) % 10000}",
-                        t("error_name_variable"): error_name,
+                        t('error_code'): error_code or f"gen_{hash(error_name) % 10000}",
+                        t("error_name"): error_name,
                         t("description"): error.get(t("description"), ""),
                         t("implementation_guide"): error.get(t("implementation_guide"), ""),
-                        'difficulty_level': error.get('difficulty_level', 'medium'),
-                        'category': category,
-                        'practice_stats': practice_stats
+                        t('difficulty_level'): error.get(t('difficulty_level'), 'medium'),
+                        t('category'): category,
+                        t('practice_stats'): practice_stats
                     }
                     
                     category_errors_with_practice.append(enhanced_error)
@@ -578,9 +558,8 @@ class TutorialUI:
         practice_data = {}
         if user_id:
             practice_data = self.practice_tracker.get_user_practice_data(user_id)
-        
-        filtered_errors = self._get_filtered_errors(practice_data)
-        
+       
+        filtered_errors = self._get_filtered_errors(practice_data)        
         if not filtered_errors:
             self._render_no_results()
             return
@@ -591,8 +570,7 @@ class TutorialUI:
     def _render_error_sections_grouped(self, filtered_errors: List[Dict[str, Any]], 
                                   practice_data: Dict[str, Any]):
         """Render errors grouped by category with enhanced section headers."""
-        errors_by_category = self._group_errors_by_category(filtered_errors)
-        
+        errors_by_category = self._group_errors_by_category(filtered_errors)        
         # Get the original category order from repository
         all_categories = self._get_categories()
         
@@ -608,11 +586,11 @@ class TutorialUI:
             # Errors are already sorted by difficulty within category
             
             # Enhanced category header with practice stats
-            practiced_count = len([e for e in errors if e.get('practice_stats')])
-            mastered_count = len([e for e in errors if e.get('practice_stats') and 
-                                e['practice_stats'].get('completion_status') == 'mastered'])
-            completed_count = len([e for e in errors if e.get('practice_stats') and 
-                                e['practice_stats'].get('completion_status') in ['completed', 'mastered']])
+            practiced_count = len([e for e in errors if e.get(t('practice_stats'))])
+            mastered_count = len([e for e in errors if e.get(t('practice_stats')) and 
+                                e[t('practice_stats')].get(t('completion_status')) == 'mastered'])
+            completed_count = len([e for e in errors if e.get(t('practice_stats')) and 
+                                e[t('practice_stats')].get(t('completion_status')) in ['completed', 'mastered']])
             total_count = len(errors)
             
             # Calculate category completion percentage
@@ -687,7 +665,7 @@ class TutorialUI:
         if search_term:
             filtered = [
                 error for error in filtered
-                if search_term in error.get(t("error_name_variable"), "").lower() or
+                if search_term in error.get(t("error_name"), "").lower() or
                 search_term in error.get(t("description"), "").lower() or
                 search_term in error.get(t("implementation_guide"), "").lower()
             ]
@@ -754,18 +732,19 @@ class TutorialUI:
 
     def _render_error_card(self, error: Dict[str, Any]):
         """Render enhanced error card with practice status indicators."""
-        error_name = error.get(t("error_name_variable"), t("unknown_error"))        
-        difficulty = error.get('difficulty_level', 'medium')
-        practice_stats = error.get('practice_stats')       
+        error_name = error.get(t("error_name"), t("unknown_error"))        
+        difficulty = error.get(t('difficulty_level'), 'medium')
+        practice_stats = error.get(t('practice_stats'))       
+        #(f"\nRendering error card for: {error}")
         # Get full error details if not provided
         if not error.get(t("description")):
-            category = error.get('category', '')
+            category = error.get(t('category'), '')
             full_error_data = None
             if category:
                 category_errors = self.repository.get_category_errors(category)
                 full_error_data = next((e for e in category_errors 
-                                      if e.get(t("error_name_variable")) == error_name), None)
-            
+                                      if e.get(t("error_name")) == error_name), None)
+
             if full_error_data:
                 error.update(full_error_data)
         
@@ -773,9 +752,9 @@ class TutorialUI:
         practice_indicator = ""
         practice_class = ""
         if practice_stats:
-            status = practice_stats.get('completion_status', 'not_started')
-            accuracy = practice_stats.get('best_accuracy', 0)
-            practice_count = practice_stats.get('practice_count', 0)
+            status = practice_stats.get(t('completion_status'), 'not_started')
+            accuracy = practice_stats.get(t('best_accuracy'), 0)
+            practice_count = practice_stats.get(t('practice_count'), 0)
             
             if status == 'mastered':
                 practice_indicator = f"🏆 {t('mastered')} ({accuracy:.0f}%)"
@@ -856,7 +835,7 @@ class TutorialUI:
             """, unsafe_allow_html=True)
         
         # Code examples
-        error_name = error.get(t("error_name_variable"), "")
+        error_name = error.get(t("error_name"), "")
         if error_name:
             examples = self.repository.get_error_examples(error_name)
             if examples.get("wrong_examples") or examples.get("correct_examples"):
@@ -864,12 +843,12 @@ class TutorialUI:
 
     def _render_practice_button(self, error: Dict[str, Any], practice_stats: Optional[Dict[str, Any]]):
         """Render enhanced practice button with context-aware text."""
-        error_name = error.get(t("error_name_variable"), t("unknown_error"))
-        error_code = error.get('error_code', f"error_{hash(error_name) % 10000}")
+        error_name = error.get(t("error_name"), t("unknown_error"))
+        error_code = error.get(t('error_code'), f"error_{hash(error_name) % 10000}")
         
         # Determine button text based on practice status
         if practice_stats:
-            status = practice_stats.get('completion_status', 'not_started')
+            status = practice_stats.get(t('completion_status'), 'not_started')
             if status == 'mastered':
                 button_text = f"🏆 {t('practice_again_mastered')}"
                 button_type = "secondary"
@@ -901,9 +880,8 @@ class TutorialUI:
         
         for category_name, errors in errors_by_category.items():
             sorted_errors = self._sort_errors_by_difficulty(errors)
-            
             # Enhanced category header with practice stats
-            practiced_count = len([e for e in sorted_errors if e.get('practice_stats')])
+            practiced_count = len([e for e in sorted_errors if e.get(t('practice_stats'))])
             total_count = len(sorted_errors)
             
             st.markdown(f"""
@@ -926,7 +904,7 @@ class TutorialUI:
         """Group errors by category."""
         grouped = {}
         for error in errors:
-            category = error.get('category', 'Unknown')
+            category = error.get(t('category'), 'Unknown')
             if category not in grouped:
                 grouped[category] = []
             grouped[category].append(error)
@@ -937,20 +915,20 @@ class TutorialUI:
         difficulty_order = {'easy': 1, 'medium': 2, 'hard': 3}
         
         def get_difficulty_sort_key(error):
-            difficulty = error.get('difficulty_level', 'medium')
+            difficulty = error.get(t('difficulty_level'), 'medium')
             return difficulty_order.get(difficulty, 2)  # Default to medium if unknown
         
         return sorted(errors, key=get_difficulty_sort_key)
 
     def _render_consecutive_error_card(self, error: Dict[str, Any]):
         """Enhanced error card with detailed interaction tracking."""        
-        error_name = error.get(t("error_name_variable"), t("unknown_error"))
-        error_code = error.get('error_code', f"error_{hash(error_name) % 10000}")
+        error_name = error.get(t("error_namee"), t("unknown_error"))
+        error_code = error.get(t('error_code'), f"error_{hash(error_name) % 10000}")
         user_id = st.session_state.auth.get("user_id") if "auth" in st.session_state else None
 
         description = error.get(t("description"), "")
         implementation_guide = error.get(t("implementation_guide"), "")
-        difficulty = error.get('difficulty_level', 'medium')       
+        difficulty = error.get(t('difficulty_level'), 'medium')       
         difficulty_text = difficulty.title()        
         examples = self.repository.get_error_examples(error_name)              
         expander_title = f" {_get_difficulty_icon(difficulty_text)} **{error_name}**"
@@ -1072,7 +1050,7 @@ class TutorialUI:
     def _start_practice_session(self, error: Dict[str, Any], practice_stats: Optional[Dict[str, Any]]):
         """Enhanced practice session start with comprehensive tracking."""
         user_id = st.session_state.auth.get("user_id") if "auth" in st.session_state else None
-        error_name = error.get(t("error_name_variable"), t("unknown_error"))
+        error_name = error.get(t("error_name"), t("unknown_error"))
 
         try:
             if user_id:
@@ -1088,7 +1066,7 @@ class TutorialUI:
             st.info(f"✨ {t('practice_mode_activated_interface_reload')}")
             
             if practice_stats:
-                previous_attempts = practice_stats.get('practice_count', 0)
+                previous_attempts = practice_stats.get(t('practice_count'), 0)
                 st.success(f"🔄 {t('continuing_practice_with')} {error_name} ({previous_attempts} {t('previous_attempts')})")
             else:
                 st.success(f"🆕 {t('starting_first_practice_with')} {error_name}")
@@ -1104,9 +1082,9 @@ class TutorialUI:
     def _prepare_practice_workflow_state(self, error: Dict[str, Any]) -> Optional[WorkflowState]:
         """Prepare a WorkflowState specifically for practice sessions with a single error."""
         try:
-            error_name = error.get(t("error_name_variable"), t("unknown_error"))
-            difficulty_level = error.get('difficulty_level', 'medium')
-            category = error.get('category', 'Other')
+            error_name = error.get(t("error_name"), t("unknown_error"))
+            difficulty_level = error.get(t('difficulty_level'), 'medium')
+            category = error.get(t('category'), 'Other')
             
             logger.debug(f"Preparing practice state for error: {error_name}, difficulty: {difficulty_level}")
             

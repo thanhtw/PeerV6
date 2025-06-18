@@ -306,11 +306,11 @@ def format_errors_for_prompt(errors: List[Dict[str, Any]], language: str = None)
     
     for i, error in enumerate(errors, 1):
         try:
-            error_name = error.get(t('error_name_variable'), "Unknown Error")
+            error_name = error.get(t('error_name'), "Unknown Error")
             error_description = error.get(t('description'), "Description not available")
             error_implementation_guide = error.get(t('implementation_guide'), "")
             error_category = error.get(t('category'), "General").upper()
-            error_list.append(f"{i}. {t('error_category')}: {error_category} | {t('error_name_variable')}: {error_name} | {t('description')}: {error_description} | {t('implementation_guide')}: {error_implementation_guide}")
+            error_list.append(f"{i}. {t('error_category')}: {error_category} | {t('error_name')}: {error_name} | {t('description')}: {error_description} | {t('implementation_guide')}: {error_implementation_guide}")
 
         except Exception as e:
             logger.warning(f"Error formatting error {i}: {str(e)}")
@@ -534,7 +534,7 @@ def _format_missing_errors(missing_errors: List) -> str:
         try:
             if isinstance(error, dict):
                 error_type = error.get(t("category"), "").upper()
-                name = error.get(t("error_name_variable"), "")
+                name = error.get(t("error_name"), "")
                 description = error.get(t("description"), "")
                 implementation_guide = error.get(t("implementation_guide"), "")
                 
@@ -560,7 +560,7 @@ def _format_found_errors(found_errors: List) -> str:
         try:
             if isinstance(error, dict):
                 error_type = error.get(t("category"), "").upper()
-                name = error.get(t("error_name_variable"), "")
+                name = error.get(t("error_name"), "")
                 description = error.get(t("description"), "")
                 formatted.append(f"{i}. {error_type} - {name}: {description}")
             else:

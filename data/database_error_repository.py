@@ -182,11 +182,11 @@ class DatabaseErrorRepository:
             formatted_errors = []
             for error in errors or []:
                 formatted_errors.append({
-                    t("error_name_variable"): error['error_name'],
-                    t("description"): error['description'],
+                    t("error_name"): error.get('error_name', ''),
+                    t("description"): error.get('description', ''),
                     t("implementation_guide"): error.get('implementation_guide', ''),
-                    "difficulty_level": error.get('difficulty_level', 'medium'),
-                    "error_code": error.get('error_code', '')
+                    t("difficulty_level"): error.get('difficulty_level', 'medium'),
+                    t("error_code"): error.get('error_code', '')
                 })
             
             return formatted_errors
@@ -251,11 +251,11 @@ class DatabaseErrorRepository:
             
             if error:
                 return {
-                    t("error_name_variable"): error['error_name'],
+                    t("error_name"): error['error_name'],
                     t("description"): error['description'],
                     t("implementation_guide"): error.get('implementation_guide', ''),
-                    "difficulty_level": error.get('difficulty_level', 'medium'),
-                    "error_code": error.get('error_code', '')
+                    t("difficulty_level"): error.get('difficulty_level', 'medium'),
+                    t("error_code"): error.get('error_code', '')
                 }
             
             return None
@@ -315,13 +315,13 @@ class DatabaseErrorRepository:
             formatted_errors = []
             for error in errors or []:
                 formatted_errors.append({
-                    "type": "java_error",
-                    "category": error['category_name'],
-                    "name": error['error_name'],
-                    "description": error['description'],
-                    "implementation_guide": error.get('implementation_guide', ''),
-                    "difficulty_level": error.get('difficulty_level', 'medium'),
-                    "error_code": error.get('error_code', '')
+                    t("type"): "java_error",
+                    t("category"): error['category_name'],
+                    t("error_name"): error['error_name'],
+                    t("description"): error['description'],
+                    t("implementation_guide"): error.get('implementation_guide', ''),
+                    t("difficulty_level"): error.get('difficulty_level', 'medium'),
+                    t("error_code"): error.get('error_code', '')
                 })
             
             return formatted_errors
@@ -407,11 +407,11 @@ class DatabaseErrorRepository:
                 for error in errors or []:
                     error_data = {
                         t("category"): error['category_name'],
-                        t("error_name_variable"): error['error_name'],
+                        t("error_name"): error['error_name'],
                         t("description"): error['description'],
                         t("implementation_guide"): error.get('implementation_guide', ''),
-                        "difficulty_level": error.get('difficulty_level', 'medium'),
-                        "error_code": error.get('error_code', '')
+                        t("difficulty_level"): error.get('difficulty_level', 'medium'),
+                        t("error_code"): error.get('error_code', '')
                     }
                     selected_errors.append(error_data)
                     problem_descriptions.append(
@@ -497,7 +497,7 @@ class DatabaseErrorRepository:
             if result:
                 return {
                     t("category"): result['category_name'],
-                    t("error_name_variable"): result['error_name'],
+                    t("error_name"): result['error_name'],
                     t("description"): result['description']
                 }
             
@@ -542,7 +542,7 @@ class DatabaseErrorRepository:
             """
             popular = self.db.execute_query(popular_query)
             stats['most_used_errors'] = [
-                {'name': row['error_name_en'], 'usage_count': row['usage_count']} 
+                {t('name'): row['error_name_en'], 'usage_count': row['usage_count']} 
                 for row in popular or []
             ]
             
@@ -670,12 +670,12 @@ class DatabaseErrorRepository:
                     examples_data = self._get_default_pattern_examples(error['error_name'])
                 
                 pattern_database[error_key] = {
-                    "name": error['error_name'],
-                    "description": error['description'],
-                    "correct_patterns": examples_data.get("correct_patterns", []),
-                    "incorrect_patterns": examples_data.get("incorrect_patterns", []),
-                    "explanation": f"Learn to identify {error['error_name']} patterns",
-                    "warning_signs": self._extract_warning_signs(error.get('tags'))
+                    t("error_name"): error['error_name'],
+                    t("description"): error['description'],
+                    t("correct_patterns"): examples_data.get("correct_patterns", []),
+                    t("incorrect_patterns"): examples_data.get("incorrect_patterns", []),
+                    t("explanation"): f"Learn to identify {error['error_name']} patterns",
+                    t("warning_signs"): self._extract_warning_signs(error.get('tags'))
                 }
             
             return pattern_database

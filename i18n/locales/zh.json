@@ -671,6 +671,9 @@
     "practice_error": "練習錯誤",
     "sort_by": "排序方式",
     "error_name": "錯誤名稱",
+    "error_code": "錯誤代碼",
+    "warning_signs": "警告標誌",
+    "practice_stats": "練習統計",
     "unknown_category": "未知類別",
     "example_code": "範例程式碼",
     "solution": "解決方案",
@@ -857,6 +860,12 @@
     "all_errors": "所有錯誤",
     "not_practiced": "未練習",    
     "in_progress": "進行中",
+
+    "practice_count": "練習次數",
+    "total_attempts": "總嘗試次數",
+    "successful_completions": "成功完成",
+    "best_accuracy": "最佳準確率",
+    "last_practiced": "最後練習時間",
 
     "your_practice_progress": "您的練習進度",
     "completion_rate": "完成率",

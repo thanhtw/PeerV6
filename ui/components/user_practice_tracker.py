@@ -6,7 +6,7 @@ import json
 from typing import Dict, List, Any, Optional
 from data.database_error_repository import DatabaseErrorRepository
 from data.mysql_connection import MySQLConnection
-from utils.language_utils import t
+from utils.language_utils import t, get_current_language
 
 
 logger = logging.getLogger(__name__)
@@ -17,22 +17,33 @@ class UserPracticeTracker:
     def __init__(self):
         self.db = MySQLConnection()
     
+    def _get_language_fields(self, base_field: str) -> str:
+        """Get the appropriate language field name."""
+        if self.current_language == 'zh':
+            return f"{base_field}_zh"
+        else:
+            return f"{base_field}_en"
+        
     def get_user_practice_data(self, user_id: str) -> Dict[str, Any]:
         """Get comprehensive practice data for a user with improved error matching."""
         if not user_id:
-            return {"practiced_errors": [], "unpracticed_errors": [], "practice_stats": {}}
+            return {t("practiced_errors"): [], t("unpracticed_errors"): [], t("practice_stats"): {}}
         
         try:
+            self.current_language = get_current_language()
+            name_field = self._get_language_fields('error_name')
+            description_field = self._get_language_fields('description')
+            cat_name_field = self._get_language_fields('name')
+            guide_field = self._get_language_fields('implementation_guide')
+
             # Get practiced errors with statistics
-            practiced_query = """
+            practiced_query = f"""
             SELECT 
                 uep.*,
                 je.difficulty_level,
-                je.error_code as je_error_code,
-                je.error_name_en as je_error_name_en,
-                je.error_name_zh as je_error_name_zh,
-                ec.name_en as category_name_en,
-                ec.name_zh as category_name_zh
+                je.error_code as error_code,
+                je.{name_field} as error_name,               
+                ec.{cat_name_field} as category_name
             FROM user_error_practice uep
             LEFT JOIN java_errors je ON uep.error_code = je.error_code
             LEFT JOIN error_categories ec ON je.category_id = ec.id
@@ -44,41 +55,28 @@ class UserPracticeTracker:
             # Clean up practiced errors data
             practiced_errors = []
             for error in practiced_errors_raw:
-                # Use the error_code from java_errors table if available, otherwise from practice table
-                error_code = error.get('je_error_code') or error.get('error_code')
-                error_name_en = error.get('je_error_name_en') or error.get('error_name_en')
-                error_name_zh = error.get('je_error_name_zh') or error.get('error_name_zh')
-                
-                if error_code and error_name_en:  # Only include if we have essential data
-                    practiced_errors.append({
-                        'error_code': error_code,
-                        'error_name_en': error_name_en,
-                        'error_name_zh': error_name_zh,
-                        'difficulty_level': error.get('difficulty_level', 'medium'),
-                        'category_name_en': error.get('category_name_en', 'Unknown'),
-                        'category_name_zh': error.get('category_name_zh', '未知'),
-                        'practice_count': error.get('practice_count', 0),
-                        'total_attempts': error.get('total_attempts', 0),
-                        'successful_completions': error.get('successful_completions', 0),
-                        'best_accuracy': error.get('best_accuracy', 0.0),
-                        'completion_status': error.get('completion_status', 'not_started'),
-                        'mastery_level': error.get('mastery_level', 0.0),
-                        'last_practiced': error.get('last_practiced')
-                    })
-            
+                practiced_errors.append({
+                    t('error_code'): error.get('error_code'),
+                    t('error_name'): error.get('error_name'),                       
+                    t('difficulty_level'): error.get('difficulty_level', 'medium'),
+                    t('category'): error.get('category', 'Unknown'),                       
+                    t('practice_count'): error.get('practice_count', 0),
+                    t('total_attempts'): error.get('total_attempts', 0),
+                    t('successful_completions'): error.get('successful_completions', 0),
+                    t('best_accuracy'): error.get('best_accuracy', 0.0),
+                    t('completion_status'): error.get('completion_status', 'not_started'),
+                    t('mastery_level'): error.get('mastery_level', 0.0),
+                    t('last_practiced'): error.get('last_practiced')
+                })
             # Get all available errors
-            all_errors_query = """
+            all_errors_query = f"""
             SELECT 
                 je.error_code,
-                je.error_name_en,
-                je.error_name_zh,
-                je.description_en,
-                je.description_zh,
-                je.implementation_guide_en,
-                je.implementation_guide_zh,
+                je.{name_field} as error_name,              
+                je.{description_field} as description,              
+                je.{guide_field} as implementation_guide,               
                 je.difficulty_level,
-                ec.name_en as category_name_en,
-                ec.name_zh as category_name_zh
+                ec.{cat_name_field} as category_name
             FROM java_errors je
             JOIN error_categories ec ON je.category_id = ec.id
             ORDER BY ec.sort_order, je.error_name_en
@@ -102,19 +100,20 @@ class UserPracticeTracker:
             WHERE user_id = %s AND practice_count > 0
             """
             stats_result = self.db.execute_query(stats_query, (user_id,), fetch_one=True)
-            practice_stats = stats_result or {}
+
+            practice_stats = stats_result
             
             logger.debug(f"Practice data retrieved: {len(practiced_errors)} practiced, {len(unpracticed_errors)} unpracticed")
             
             return {
-                "practiced_errors": practiced_errors,
-                "unpracticed_errors": unpracticed_errors,
-                "practice_stats": practice_stats
+                t("practiced_errors"): practiced_errors,
+                t("unpracticed_errors"): unpracticed_errors,
+                t("practice_stats"): practice_stats
             }
             
         except Exception as e:
             logger.error(f"Error getting user practice data: {str(e)}")
-            return {"practiced_errors": [], "unpracticed_errors": [], "practice_stats": {}}
+            return {t("practiced_errors"): [], t("unpracticed_errors"): [], t("practice_stats"): {}}
     
     def start_practice_session(self, user_id: str, error_data: Dict[str, Any]) -> None:
         """Record the start of a practice session with improved error code handling."""
@@ -122,28 +121,33 @@ class UserPracticeTracker:
             return
             
         try:
+            self.current_language = get_current_language()
+            name_field = self._get_language_fields('error_name')
+            description_field = self._get_language_fields('description')
+            cat_name_field = self._get_language_fields('name')
+            guide_field = self._get_language_fields('implementation_guide')
+            
             # Extract error information with fallbacks
-            error_code = error_data.get('error_code', '')
-            error_name_en = error_data.get(t("error_name_variable"), error_data.get('error_name', ''))
-            error_name_zh = error_data.get('error_name_zh', error_name_en)
-            category = error_data.get('category', '')
+            error_code = error_data.get(t('error_code'), '')
+            error_name= error_data.get(t("error_name"),'')            
+            category = error_data.get(t('category'), '')
             
             # If no error_code, try to get it from database by name
-            if not error_code and error_name_en:
-                lookup_query = """
+            if not error_code and error_name:
+                lookup_query = f"""
                 SELECT je.error_code 
                 FROM java_errors je 
-                WHERE je.error_name_en = %s OR je.error_name_zh = %s
+                WHERE je.{name_field} = %s
                 LIMIT 1
                 """
-                lookup_result = self.db.execute_query(lookup_query, (error_name_en, error_name_en), fetch_one=True)
+                lookup_result = self.db.execute_query(lookup_query, (error_name,), fetch_one=True)
                 if lookup_result:
                     error_code = lookup_result['error_code']
             
             # Generate error_code if still missing
             if not error_code:
                 import hashlib
-                hash_input = f"{error_name_en}_{category}"
+                hash_input = f"{error_name}_{category}"
                 hash_object = hashlib.md5(hash_input.encode())
                 error_code = f"gen_{hash_object.hexdigest()[:8]}"
             
@@ -165,10 +169,10 @@ class UserPracticeTracker:
             """
             
             self.db.execute_query(upsert_query, (
-                user_id, error_code, error_name_en, error_name_zh, category
+                user_id, error_code, error_name, error_name, category
             ))
             
-            logger.debug(f"Started practice session for user {user_id}, error {error_code} ({error_name_en})")
+            logger.debug(f"Started practice session for user {user_id}, error {error_code} ({error_name})")
             
         except Exception as e:
             logger.error(f"Error starting practice session: {str(e)}")
