@@ -480,10 +480,10 @@ class StudentResponseEvaluator:
                 
             # Create the prompt for the LLM
             prompt = create_comparison_report_prompt(review_analysis)
-            
+            print("\n\nPROMPT OUT: ",prompt)
             # Generate the report with the LLM
             response = self.llm.invoke(prompt)
-            
+            print("\n RESPONSE OUT: ",response)
             # Process the response
             if hasattr(response, 'content'):
                 report = response.content

@@ -68,9 +68,9 @@ class PromptTemplate:
         code: str,
         error_instructions: str        
     ) -> str:
-        """Function-based template for evaluation prompt."""
-        # Use format() instead of f-strings for complex templates with JSON
-        base_prompt = """你是一位 Java 程式碼品質專家，負責分析程式碼以驗證是否正確實作了特定請求的錯誤。
+        """Function-based template for evaluation prompt - FIXED: Properly escaped braces for .format()"""
+        # FIXED: Use .format() with properly escaped braces
+        base_prompt = f"""你是一位 Java 程式碼品質專家，負責分析程式碼以驗證是否正確實作了特定請求的錯誤。
 
     任務：
     評估提供的 Java 程式碼是否正確實作了來自請求清單的恰好 {error_count} 個特定錯誤。
@@ -97,26 +97,26 @@ class PromptTemplate:
 
     回應格式：
     ```json
-    {{
+    {{{{
     "已識別問題": [
-        {{
+        {{{{
         "錯誤類型": "邏輯錯誤",
         "錯誤名稱": "短路評估的迷思",
         "行號": 42,
-        "程式碼片段": "if (obj != null & obj.getValue() > 0) {{ ... }}",
+        "程式碼片段": "if (obj != null & obj.getValue() > 0)",
         "解釋": "使用非短路 '&' 運算子而不是 '&&'，導致即使 obj 為 null，obj.getValue() 仍會被評估，可能導致 NullPointerException。"
-        }}
+        }}}}
     ],
     "遺漏問題": [
-        {{
+        {{{{
         "錯誤類型": "代碼品質", 
         "錯誤名稱": "程式碼重複",
         "解釋": "未發現重複邏輯或重複程式碼區塊的實例。程式碼重複發生在相似功能被多次實作而不是被提取為可重用方法時。"
-        }}
+        }}}}
     ],
     "有效": true,
     "反饋": "程式碼成功實作了所有 {error_count} 個請求的錯誤。"
-    }}
+    }}}}
     ```
 
     驗證標準：
@@ -198,8 +198,8 @@ class PromptTemplate:
         accuracy_score_threshold: float,
         meaningful_score_threshold: float       
     ) -> str:
-        """Function-based template for review analysis prompt."""
-        # Use format() for complex templates with JSON
+        """Function-based template for review analysis prompt - FIXED: Use f-string consistently"""
+        # FIXED: Use f-string consistently instead of mixing with .format()
         base_prompt = f"""你是一位教育評估專家，負責分析學生的 Java 程式碼評審技能。
 
     任務：
@@ -261,14 +261,7 @@ class PromptTemplate:
     - 每個問題恰好出現在「已識別」或「遺漏」中一次
     - "Identified Count" 等於 "Identified Problems" 中的項目數
     - 僅使用指定的 JSON 欄位
-    """.format(
-        code=code,
-        problem_count=problem_count,
-        problems_text=problems_text,
-        student_review=student_review,
-        accuracy_score_threshold=accuracy_score_threshold,
-        meaningful_score_threshold=meaningful_score_threshold
-    )
+    """
         
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:
@@ -333,8 +326,8 @@ class PromptTemplate:
         identified_text: str,
         missed_text: str        
     ) -> str:
-        """Function-based template for comparison report prompt."""
-        # Use format() for complex templates with JSON
+        """Function-based template for comparison report prompt - FIXED: Use only f-string, remove .format()"""
+        # FIXED: Use only f-string, removed the incorrect .format() call
         base_prompt = f"""你是一位教育評估專家，為 Java 程式設計學生創建綜合性的程式碼評審回饋報告。
 
     學生表現：
@@ -413,15 +406,7 @@ class PromptTemplate:
     - 如果沒有正確識別或遺漏的問題，使用空陣列 []
     - 確保所有 JSON 字串都正確轉義且有效
     - 所有回饋都基於提供的表現數據
-    """.format(
-        total_problems=total_problems,
-        identified_count=identified_count,
-        accuracy=accuracy,
-        missed_count=missed_count,
-        identified_text=identified_text,
-        missed_text=missed_text        
-    )
-        print("\n based prompt",base_prompt)
+    """
         
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:

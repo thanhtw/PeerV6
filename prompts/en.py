@@ -66,8 +66,8 @@ class PromptTemplate:
         code: str,
         error_instructions: str        
     ) -> str:
-        """Function-based template for evaluation prompt."""
-        # Use format() instead of f-strings for complex templates with JSON
+        """Function-based template for evaluation prompt - FIXED: Use f-string instead of .format()"""
+        # FIXED: Use f-string consistently to avoid brace escaping issues
         base_prompt = f"""You are a Java code quality expert analyzing code to verify correct implementation of specific requested errors.
 
           TASK:
@@ -120,11 +120,7 @@ class PromptTemplate:
           - "Valid" = true ONLY if exactly {error_count} requested errors are implemented
           - Focus solely on the specified errors, not general code quality issues
           - Ensure each identified error truly matches a requested error          
-          """.format(
-              error_count=error_count,
-              code=code,
-              error_instructions=error_instructions
-          )
+          """
         
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:
@@ -195,8 +191,8 @@ class PromptTemplate:
         meaningful_score_threshold: float       
     ) -> str:
         """Function-based template for review analysis prompt."""
-        # Use format() for complex templates with JSON
-        base_prompt = """You are an educational assessment specialist analyzing a student's Java code review skills.
+        # Use f-string consistently
+        base_prompt = f"""You are an educational assessment specialist analyzing a student's Java code review skills.
 
     TASK:
     Analyze how effectively the student identified known issues during their code review.
@@ -256,14 +252,7 @@ class PromptTemplate:
     CRITICAL REQUIREMENTS:
     - Each problem appears exactly once in either "Identified" or "Missed"
     - "Identified Count" equals the number of items in "Identified Problems"
-    - Use only the specified JSON fields""".format(
-        code=code,
-        problem_count=problem_count,
-        problems_text=problems_text,
-        student_review=student_review,
-        accuracy_score_threshold=accuracy_score_threshold,
-        meaningful_score_threshold=meaningful_score_threshold
-    )
+    - Use only the specified JSON fields"""
         
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:
@@ -328,7 +317,7 @@ class PromptTemplate:
         missed_text: str       
     ) -> str:
         """Function-based template for comparison report prompt."""
-        # Use format() for complex templates with JSON
+        # Use f-string consistently
         base_prompt = f"""You are an educational assessment expert creating a comprehensive code review feedback report for a Java programming student.
 
     STUDENT PERFORMANCE:
@@ -406,14 +395,7 @@ class PromptTemplate:
     - Return ONLY the JSON object with no additional text or formatting
     - Use empty arrays [] if no correctly identified or missed issues exist
     - Ensure all JSON strings are properly escaped and valid
-    - Base all feedback on provided performance data""".format(
-        total_problems=total_problems,
-        identified_count=identified_count,
-        accuracy=accuracy,
-        missed_count=missed_count,
-        identified_text=identified_text,
-        missed_text=missed_text
-    )
+    - Base all feedback on provided performance data"""
 
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:

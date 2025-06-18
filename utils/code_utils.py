@@ -290,7 +290,7 @@ def process_llm_response(response) -> str:
 
 def format_errors_for_prompt(errors: List[Dict[str, Any]], language: str = None) -> str:
     """
-    Format errors for inclusion in prompts with language support.
+    Format errors for inclusion in prompts with language support - FIXED: Better error handling.
     
     Args:
         errors: List of error dictionaries
@@ -302,21 +302,55 @@ def format_errors_for_prompt(errors: List[Dict[str, Any]], language: str = None)
     if not errors:
         return t("no_errors_available")
     
+    if not isinstance(errors, list):
+        logger.warning(f"Expected list for errors, got {type(errors)}")
+        return t("no_errors_available")
+    
     error_list = []
     
     for i, error in enumerate(errors, 1):
         try:
-            error_name = error.get(t('error_name'), "Unknown Error")
-            error_description = error.get(t('description'), "Description not available")
-            error_implementation_guide = error.get(t('implementation_guide'), "")
-            error_category = error.get(t('category'), "General").upper()
-            error_list.append(f"{i}. {t('error_category')}: {error_category} | {t('error_name')}: {error_name} | {t('description')}: {error_description} | {t('implementation_guide')}: {error_implementation_guide}")
+            if not isinstance(error, dict):
+                logger.warning(f"Expected dict for error {i}, got {type(error)}")
+                continue
+                
+            # FIXED: Use safe key access with fallbacks for different language keys
+            error_name = (error.get(t('error_name')) or 
+                         error.get('error_name') or 
+                         error.get('name') or 
+                         "Unknown Error")
+            
+            error_description = (error.get(t('description')) or 
+                               error.get('description') or 
+                               "Description not available")
+            
+            error_implementation_guide = (error.get(t('implementation_guide')) or 
+                                        error.get('implementation_guide') or 
+                                        "")
+            
+            error_category = (error.get(t('category')) or 
+                            error.get('category') or 
+                            error.get('type') or 
+                            "General").upper()
+            
+            # FIXED: Create formatted string safely
+            formatted_error = f"{i}. {t('error_category')}: {error_category} | {t('error_name')}: {error_name} | {t('description')}: {error_description}"
+            
+            if error_implementation_guide:
+                formatted_error += f" | {t('implementation_guide')}: {error_implementation_guide}"
+                
+            error_list.append(formatted_error)
 
         except Exception as e:
             logger.warning(f"Error formatting error {i}: {str(e)}")
-            continue
+            # Add a fallback entry
+            try:
+                fallback = f"{i}. Error formatting failed: {str(error)}"
+                error_list.append(fallback)
+            except:
+                continue
     
-    return "\n\n".join(error_list)
+    return "\n\n".join(error_list) if error_list else t("no_errors_available")
 
 def format_problems_for_prompt(problems: List[str]) -> str:
     """
@@ -357,6 +391,9 @@ def create_code_generation_prompt(code_length: str, difficulty_level: str,
         complexity = CODE_COMPLEXITY_MAP.get(code_length.lower(), CODE_COMPLEXITY_MAP["medium"])
         
         prompt_template = get_prompt_template_instance()
+        if not prompt_template:
+            logger.error("Failed to get prompt template instance")
+            return ""
         prompt = prompt_template.create_code_generation_prompt_template(
             code_length=code_length,
             difficulty_level=difficulty_level,
@@ -372,7 +409,7 @@ def create_code_generation_prompt(code_length: str, difficulty_level: str,
 
 def create_evaluation_prompt(code: str, requested_errors: List[Dict]) -> str:
     """
-    Create a prompt for evaluating whether code contains required errors.
+    Create a prompt for evaluating whether code contains required errors - FIXED: Better error handling.
     
     Args:
         code: The code to evaluate
@@ -386,15 +423,43 @@ def create_evaluation_prompt(code: str, requested_errors: List[Dict]) -> str:
             logger.error("Invalid inputs for evaluation prompt")
             return ""
         
+        if not isinstance(code, str):
+            logger.error(f"Expected string for code, got {type(code)}")
+            return ""
+            
+        if not isinstance(requested_errors, list):
+            logger.error(f"Expected list for requested_errors, got {type(requested_errors)}")
+            return ""
+        
         prompt_template = get_prompt_template_instance()
+        
+        # FIXED: Ensure we have a valid prompt template
+        if not prompt_template:
+            logger.error("Failed to get prompt template instance")
+            return ""
+            
+        error_instructions = format_errors_for_prompt(requested_errors, get_current_language())
+        
+        if not error_instructions:
+            logger.error("Failed to format errors for prompt")
+            return ""
+        
         prompt = prompt_template.create_evaluation_prompt_template(
             error_count=len(requested_errors),
             code=code,
-            error_instructions=format_errors_for_prompt(requested_errors, get_current_language())
+            error_instructions=error_instructions
         )
+        
+        if not prompt:
+            logger.error("Prompt template returned empty prompt")
+            return ""
+            
         return prompt
+        
     except Exception as e:
         logger.error(f"Error creating evaluation prompt: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return ""
 
 def create_regeneration_prompt(code: str, domain: str, missing_errors: List,
@@ -414,6 +479,9 @@ def create_regeneration_prompt(code: str, domain: str, missing_errors: List,
     """
     try:
         prompt_template = get_prompt_template_instance()
+        if not prompt_template:
+            logger.error("Failed to get prompt template instance")
+            return ""
         prompt = prompt_template.create_regeneration_prompt_template(
             total_requested=len(requested_errors),
             domain=domain,
@@ -448,6 +516,9 @@ def create_review_analysis_prompt(code: str, known_problems: List[str],
             return ""
         
         prompt_template = get_prompt_template_instance()
+        if not prompt_template:
+            logger.error("Failed to get prompt template instance")
+            return ""
         prompt = prompt_template.create_review_analysis_prompt_template(
             code=code,
             problem_count=len(known_problems),
@@ -479,6 +550,9 @@ def create_feedback_prompt(review_analysis: Dict[str, Any], iteration: int = 1,
     try:
         
         prompt_template = get_prompt_template_instance()
+        if not prompt_template:
+            logger.error("Failed to get prompt template instance")
+            return ""
         prompt = prompt_template.create_feedback_prompt_template(
             iteration=iteration,
             max_iterations=max_iterations,
@@ -496,39 +570,75 @@ def create_feedback_prompt(review_analysis: Dict[str, Any], iteration: int = 1,
 
 def create_comparison_report_prompt(review_analysis: Dict[str, Any]) -> str:
     """
-    Create a prompt for generating a comparison report.
+    Create a prompt for generating a comparison report - FIXED: Better error handling and validation.
     
     Args:
         review_analysis: Analysis of the latest review
-        review_history: History of all review attempts
         
     Returns:
         Comparison report prompt string
     """
     try:
-        print(f"\nreview_analysis of ------------------- {review_analysis}")
-
-        print("\ntotal_problems: ", review_analysis.get(t("total_problems"), 0))
-        print("\nidentified_count: ", review_analysis.get(t("identified_count"), 0))
-        print("\naccuracy: ", review_analysis.get(t("accuracy"), 0))
-        print("\nmissed_count: ", len(review_analysis.get(t("missed_problems"),0)))
-        print("\nidentified_text: ", _format_found_errors_comparison_report(review_analysis.get(t("identified_problems"), 0)))
-        print("\nmissed_text: ", _format_found_errors_comparison_report(review_analysis.get(t("missed_problems"),0)))
-      
-
+        if not review_analysis or not isinstance(review_analysis, dict):
+            logger.error(f"Invalid review_analysis: {type(review_analysis)}")
+            return ""
+        
+        # FIXED: Safe extraction with fallbacks
+        total_problems = review_analysis.get(t("total_problems"), 0)
+        identified_count = review_analysis.get(t("identified_count"), 0) 
+        accuracy = review_analysis.get(t("accuracy"), review_analysis.get(t("identified_percentage"), 0))
+        
+        # FIXED: Safe handling of missed_problems
+        missed_problems = review_analysis.get(t("missed_problems"), [])
+        if not isinstance(missed_problems, list):
+            logger.warning(f"Expected list for missed_problems, got {type(missed_problems)}")
+            missed_problems = []
+        missed_count = len(missed_problems)
+        
+        # FIXED: Safe handling of identified_problems  
+        identified_problems = review_analysis.get(t("identified_problems"), [])
+        if not isinstance(identified_problems, list):
+            logger.warning(f"Expected list for identified_problems, got {type(identified_problems)}")
+            identified_problems = []
+        
+        # Format the problem lists safely
+        identified_text = _format_found_errors_comparison_report(identified_problems)
+        missed_text = _format_found_errors_comparison_report(missed_problems)
+        
+        # Validate numeric values
+        try:
+            total_problems = int(total_problems)
+            identified_count = int(identified_count) 
+            accuracy = float(accuracy)
+            missed_count = int(missed_count)
+        except (ValueError, TypeError) as ve:
+            logger.error(f"Invalid numeric values in review_analysis: {ve}")
+            return ""
+        
         prompt_template = get_prompt_template_instance()
+        if not prompt_template:
+            logger.error("Failed to get prompt template instance")
+            return ""
+        
         prompt = prompt_template.create_comparison_report_prompt_template(
-            total_problems=review_analysis.get(t("total_problems"), 0),
-            identified_count=review_analysis.get(t("identified_count"), 0),
-            accuracy=review_analysis.get(t("accuracy"), 0),
-            missed_count=len(review_analysis.get(t("missed_problems"),0)),
-            identified_text=_format_found_errors_comparison_report(review_analysis.get(t("identified_problems"), 0)),
-            missed_text=_format_found_errors_comparison_report(review_analysis.get(t("missed_problems"),0))
+            total_problems=total_problems,
+            identified_count=identified_count,
+            accuracy=accuracy,
+            missed_count=missed_count,
+            identified_text=identified_text,
+            missed_text=missed_text
         )
         
+        if not prompt:
+            logger.error("Prompt template returned empty prompt")
+            return ""
+            
         return prompt
+        
     except Exception as e:
         logger.error(f"Error creating comparison report prompt: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return ""
 
 # =============================================================================
@@ -582,25 +692,41 @@ def _format_found_errors(found_errors: List) -> str:
     
     return "\n".join(formatted)
 
-def _format_found_errors_comparison_report(found_errors: List) -> str:
-    """Format found errors for prompt inclusion."""
+def _format_found_errors_comparison_report(found_errors) -> str:
+    """Format found errors for comparison report prompt inclusion - FIXED: Better error handling"""
     if not found_errors:
+        return t("no_found_errors")
+    
+    # Handle case where found_errors is 0 (number instead of list)
+    if isinstance(found_errors, (int, float)) and found_errors == 0:
+        return t("no_found_errors")
+    
+    # Handle non-list inputs
+    if not isinstance(found_errors, list):
+        logger.warning(f"Expected list for found_errors, got {type(found_errors)}")
         return t("no_found_errors")
     
     formatted = []
     for i, error in enumerate(found_errors, 1):
         try:
             if isinstance(error, dict):
-                problem = error.get(t("problem"), "").upper()
-                student_comment = error.get(t("student_comment"), "")               
-                formatted.append(f"{i}. {problem} - {t('student_comment')}: {student_comment}")
+                # FIXED: Use safe key access with fallbacks
+                problem = error.get("Problem", error.get("问题", error.get("問題", "")))
+                student_comment = error.get("Student Comment", error.get("学生评论", error.get("學生評論", "")))
+                
+                if problem and student_comment:
+                    formatted.append(f"{i}. {problem} - {t('student_comment')}: {student_comment}")
+                elif problem:
+                    formatted.append(f"{i}. {problem}")
+                else:
+                    formatted.append(f"{i}. {str(error)}")
             else:
                 formatted.append(f"{i}. {str(error)}")
         except Exception as e:
             logger.warning(f"Error formatting found error {i}: {str(e)}")
             continue
     
-    return "\n".join(formatted)
+    return "\n".join(formatted) if formatted else t("no_found_errors")
 
 def _get_category_icon(category_name: str) -> str:
         
