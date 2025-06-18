@@ -477,7 +477,7 @@ def create_feedback_prompt(review_analysis: Dict[str, Any], iteration: int = 1,
         Feedback prompt string
     """
     try:
-        print(f"\nreview_analysis of {review_analysis}")
+        
         prompt_template = get_prompt_template_instance()
         prompt = prompt_template.create_feedback_prompt_template(
             iteration=iteration,
@@ -508,15 +508,24 @@ def create_comparison_report_prompt(review_analysis: Dict[str, Any]) -> str:
     try:
         print(f"\nreview_analysis of ------------------- {review_analysis}")
 
+        print("\ntotal_problems: ", review_analysis.get(t("total_problems"), 0))
+        print("\nidentified_count: ", review_analysis.get(t("identified_count"), 0))
+        print("\naccuracy: ", review_analysis.get(t("accuracy"), 0))
+        print("\nmissed_count: ", len(review_analysis.get(t("missed_problems"),0)))
+        print("\nidentified_text: ", review_analysis.get(t("identified_problems"), 0))
+        print("\nmissed_text: ", review_analysis.get(t("missed_problems"),0))
+      
+
         prompt_template = get_prompt_template_instance()
         prompt = prompt_template.create_comparison_report_prompt_template(
             total_problems=review_analysis.get(t("total_problems"), 0),
             identified_count=review_analysis.get(t("identified_count"), 0),
-            accuracy=review_analysis.get(t("identified_percentage"), 0),
+            accuracy=review_analysis.get(t("accuracy"), 0),
             missed_count=len(review_analysis.get(t("missed_problems"),0)),
             identified_text=review_analysis.get(t("identified_problems"), 0),
             missed_text=review_analysis.get(t("missed_problems"),0)
         )
+        
         return prompt
     except Exception as e:
         logger.error(f"Error creating comparison report prompt: {str(e)}")

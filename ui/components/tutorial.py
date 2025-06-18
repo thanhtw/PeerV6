@@ -75,8 +75,7 @@ class TutorialUI:
             
     def _render_practice_mode(self):
         """Render the enhanced professional practice mode interface."""
-        practice_error = st.session_state.get("practice_error_data", {})    
-        #print(f"\nPractice error data: {practice_error}")    
+        practice_error = st.session_state.get("practice_error_data", {})   
         error_name = practice_error.get(t("error_name"), t("unknown_error"))        
         difficulty = practice_error.get(t("difficulty_level"), "medium")
         category = practice_error.get(t("category"), "")

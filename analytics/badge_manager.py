@@ -79,8 +79,7 @@ class BadgeManager:
                 ORDER BY ub.awarded_at DESC
             """
             
-            badges = self.db.execute_query(query, (user_id,))
-            print(f"\nRetrieved {badges} badges for user {user_id}")
+            badges = self.db.execute_query(query, (user_id,))            
             return badges or []
                 
         except Exception as e:

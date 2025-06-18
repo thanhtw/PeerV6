@@ -156,12 +156,10 @@ class WorkflowConditions:
             bool: True if review is sufficient, False otherwise
         """
         try:
-            print(f"Analysis result in condition: ",analysis)
+            
             identified_count = analysis.get(t("identified_count"), 0)
             total_problems = analysis.get(t("total_problems"), 0)
-            original_error_count = getattr(state, "original_error_count", 0)
-            print(f"Evaluating review sufficiency: identified_count={identified_count}, "
-                  f"total_problems={total_problems}, original_error_count={original_error_count}")  
+            original_error_count = getattr(state, "original_error_count", 0)            
             # Use original_error_count as the authoritative source
             if original_error_count > 0:
                 total_problems = original_error_count

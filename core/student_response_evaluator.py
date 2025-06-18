@@ -99,10 +99,10 @@ class StudentResponseEvaluator:
                 
                 # Extract JSON data from the response
                 analysis_data = self._extract_json_from_text(processed_response)       
-                print(f"\nRaw analysis data: {analysis_data}")  # Debugging output          
+                         
                 # Process the analysis data
                 enhanced_analysis = self._process_enhanced_analysis(analysis_data, known_problems)   
-                print(f"\nEnhanced analysis: {enhanced_analysis}")  # Debugging output            
+                       
                 return enhanced_analysis
                 
             except Exception as e:
