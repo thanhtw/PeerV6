@@ -442,7 +442,6 @@ class WorkflowNodes:
             # FIXED: Evaluate review sufficiency using clear criteria
             from workflow.conditions import WorkflowConditions
             is_sufficient = WorkflowConditions.evaluate_review_sufficiency(state, analysis)
-            print(f"\nReview sufficiency evaluated as: {is_sufficient}")
             analysis[t('review_sufficient')] = is_sufficient
             state.review_sufficient = is_sufficient
             

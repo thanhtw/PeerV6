@@ -68,8 +68,6 @@ class PromptTemplate:
         code: str,
         error_instructions: str        
     ) -> str:
-        """Function-based template for evaluation prompt - FIXED: Properly escaped braces for .format()"""
-        # FIXED: Use .format() with properly escaped braces
         base_prompt = f"""你是一位 Java 程式碼品質專家，負責分析程式碼以驗證是否正確實作了特定請求的錯誤。
 
     任務：
@@ -97,26 +95,26 @@ class PromptTemplate:
 
     回應格式：
     ```json
-    {{{{
+    {{
     "已識別問題": [
-        {{{{
+        {{
         "錯誤類型": "邏輯錯誤",
         "錯誤名稱": "短路評估的迷思",
         "行號": 42,
         "程式碼片段": "if (obj != null & obj.getValue() > 0)",
         "解釋": "使用非短路 '&' 運算子而不是 '&&'，導致即使 obj 為 null，obj.getValue() 仍會被評估，可能導致 NullPointerException。"
-        }}}}
+        }}
     ],
     "遺漏問題": [
-        {{{{
+        {{
         "錯誤類型": "代碼品質", 
         "錯誤名稱": "程式碼重複",
         "解釋": "未發現重複邏輯或重複程式碼區塊的實例。程式碼重複發生在相似功能被多次實作而不是被提取為可重用方法時。"
-        }}}}
+        }}
     ],
     "有效": true,
     "反饋": "程式碼成功實作了所有 {error_count} 個請求的錯誤。"
-    }}}}
+    }}
     ```
 
     驗證標準：

@@ -118,31 +118,13 @@ class ComparisonReportRenderer:
         summary = report_data.get("performance_summary", {})
         
         # Performance metrics grid
-        total_issues = summary.get('total_issues', 0)
-        identified_count = summary.get('identified_count', 0)
-        missed_count = summary.get('missed_count', 0)
-        
-        # st.markdown(f'''
-        # <div class="comparison-section-title">📊 {t("review_performance_summary")}</div>
-        # <div class="comparison-metrics-grid">
-        #     <div class="comparison-metric-card">
-        #         <div class="comparison-metric-value">{total_issues}</div>
-        #         <div class="comparison-metric-label">{t('total_issues')}</div>
-        #     </div>
-        #     <div class="comparison-metric-card">
-        #         <div class="comparison-metric-value success-highlight">{identified_count}</div>
-        #         <div class="comparison-metric-label">{t('identified_count')}</div>
-        #     </div>
-        #     <div class="comparison-metric-card">
-        #         <div class="comparison-metric-value {'success-highlight' if missed_count == 0 else 'error-highlight'}">{missed_count}</div>
-        #         <div class="comparison-metric-label">{t('missed_count')}</div>
-        #     </div>
-        # </div>
-        # ''', unsafe_allow_html=True)
+        total_issues = summary.get(t('total_issues'), 0)
+        identified_count = summary.get(t('identified_count'), 0)
+        missed_count = summary.get(t('missed_count'), 0)
         
         # Overall assessment card
-        overall_assessment = summary.get('overall_assessment', '')
-        completion_status = summary.get('completion_status', '')
+        overall_assessment = summary.get(t('overall_assessment'), '')
+        completion_status = summary.get(t('completion_status'), '')
         if overall_assessment or completion_status:
             st.markdown(f'''
             <div class="comparison-encouragement">
@@ -155,14 +137,14 @@ class ComparisonReportRenderer:
     
     def _render_identified_issues(self, report_data: Dict[str, Any]) -> None:
         """Render the correctly identified issues section."""
-        identified = report_data.get("correctly_identified_issues", [])
+        identified = report_data.get(t("correctly_identified_issues"), [])
         st.markdown(f'<div class="comparison-section-title">✅ {t("correctly_identified_issues")}</div>', unsafe_allow_html=True)
         
         if identified:
             st.markdown('<ul class="comparison-issue-list">', unsafe_allow_html=True)
             for issue in identified:
-                desc = issue.get("issue_description", "")
-                praise = issue.get("praise_comment", "")
+                desc = issue.get(t("issue_description"), "")
+                praise = issue.get(t("praise_comment"), "")
                 st.markdown(f'<li class="success-item"><span class="comparison-badge">✅ {t("found")}</span> {desc}<div class="comparison-praise">🌟 {praise}</div></li>', unsafe_allow_html=True)
             st.markdown('</ul>', unsafe_allow_html=True)
         else:
@@ -170,15 +152,15 @@ class ComparisonReportRenderer:
     
     def _render_missed_issues(self, report_data: Dict[str, Any]) -> None:
         """Render the missed issues section."""
-        missed = report_data.get("missed_issues", [])
+        missed = report_data.get(t("missed_issues"), [])
         st.markdown(f'<div class="comparison-section-title">❌ {t("missed_issues")}</div>', unsafe_allow_html=True)
         
         if missed:
             st.markdown('<ul class="comparison-issue-list">', unsafe_allow_html=True)
             for issue in missed:
-                desc = issue.get("issue_description", "")
-                why = issue.get("why_important", "")
-                how = issue.get("how_to_find", "")
+                desc = issue.get(t("issue_description"), "")
+                why = issue.get(t("why_important"), "")
+                how = issue.get(t("how_to_find"), "")
                 st.markdown(f'<li class="error-item"><span class="comparison-badge">❌ {t("missed")}</span> {desc}<div class="comparison-missed">❗ <strong>{t("why_important")}:</strong> {why}<br>🔍 <strong>{t("how_to_find")}:</strong> {how}</div></li>', unsafe_allow_html=True)
             st.markdown('</ul>', unsafe_allow_html=True)
         else:
@@ -188,51 +170,51 @@ class ComparisonReportRenderer:
     
     def _render_improvement_tips(self, report_data: Dict[str, Any]) -> None:
         """Render the tips for improvement section."""
-        tips = report_data.get("tips_for_improvement", [])
+        tips = report_data.get(t("tips_for_improvement"), [])
         if tips:
             st.markdown(f'<div class="comparison-section-title">💡 {t("tips_for_improvement")}</div>', unsafe_allow_html=True)
             for tip in tips:
                 st.markdown(
-                    f'<div class="comparison-tip"><strong>{tip.get("category", "")}:</strong> {tip.get("tip", "")}<br><em>💭 {t("example")}: {tip.get("example", "")}</em></div>',
+                    f'<div class="comparison-tip"><strong>{tip.get(t("category"), "")}:</strong> {tip.get(t("tip"), "")}<br><em>💭 {t("example")}: {tip.get(t("example"), "")}</em></div>',
                     unsafe_allow_html=True
                 )
     
     def _render_java_guidance(self, report_data: Dict[str, Any]) -> None:
         """Render the Java-specific guidance section."""
-        java_guidance = report_data.get("java_specific_guidance", [])
+        java_guidance = report_data.get(t("java_specific_guidance"), [])
         if java_guidance:
             st.markdown(f'<div class="comparison-section-title">☕ {t("java_specific_guidance")}</div>', unsafe_allow_html=True)
             for item in java_guidance:
                 st.markdown(
-                    f'<div class="comparison-tip"><strong>☕ {item.get("topic", "")}:</strong> {item.get("guidance", "")}</div>',
+                    f'<div class="comparison-tip"><strong>☕ {item.get(t("topic"), "")}:</strong> {item.get(t("guidance"), "")}</div>',
                     unsafe_allow_html=True
                 )
     
     def _render_encouragement_section(self, report_data: Dict[str, Any]) -> None:
         """Render the encouragement and next steps section."""
-        encouragement = report_data.get("encouragement_and_next_steps", {})
+        encouragement = report_data.get(t("encouragement_and_next_steps"), {})
         if encouragement:
             st.markdown(f'<div class="comparison-section-title">🎯 {t("encouragement_and_next_steps")}</div>', unsafe_allow_html=True)
             st.markdown(
                 f'<div class="comparison-encouragement">'
-                f'<strong>🌟 {t("positive_feedback")}:</strong> {encouragement.get("positive_feedback", "")}<br><br>'
-                f'<strong>🎯 {t("next_focus_areas")}:</strong> {encouragement.get("next_focus_areas", "")}<br><br>'
-                f'<strong>📚 {t("learning_objectives")}:</strong> {encouragement.get("learning_objectives", "")}'
+                f'<strong>🌟 {t("positive_feedback")}:</strong> {encouragement.get(t("positive_feedback"), "")}<br><br>'
+                f'<strong>🎯 {t("next_focus_areas")}:</strong> {encouragement.get(t("next_focus_areas"), "")}<br><br>'
+                f'<strong>📚 {t("learning_objectives")}:</strong> {encouragement.get(t("learning_objectives"), "")}'
                 f'</div>',
                 unsafe_allow_html=True
             )
     
     def _render_detailed_feedback(self, report_data: Dict[str, Any]) -> None:
         """Render the detailed feedback section."""
-        detailed = report_data.get("detailed_feedback", {})
+        detailed = report_data.get(t("detailed_feedback"), {})
         if detailed:
             st.markdown('<div class="section-divider"></div>', unsafe_allow_html=True)
             st.markdown(f'<div class="comparison-section-title">📝 {t("detailed_feedback")}</div>', unsafe_allow_html=True)
-            
-            strengths = detailed.get("strengths_identified", [])
-            patterns = detailed.get("improvement_patterns", [])
-            approach = detailed.get("review_approach_feedback", "")
-            
+
+            strengths = detailed.get(t("strengths_identified"), [])
+            patterns = detailed.get(t("improvement_patterns"), [])
+            approach = detailed.get(t("review_approach_feedback"), "")
+
             if strengths:
                 st.markdown(f'<strong>💪 {t("strengths_identified")}:</strong>', unsafe_allow_html=True)
                 st.markdown('<ul class="comparison-feedback-list">' + ''.join(f'<li>✨ {s}</li>' for s in strengths) + '</ul>', unsafe_allow_html=True)

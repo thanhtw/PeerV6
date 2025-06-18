@@ -549,8 +549,6 @@ class StudentResponseEvaluator:
             
             # Initialize the report structure
             formatted_report = {}
-            print("\n\nParsed Data:", parsed_data)
-            print("\n\nRaw Content:", raw_content)
             # Extract each required section from parsed_data or raw_content
             if parsed_data and isinstance(parsed_data, dict):
                 # Extract from parsed JSON
@@ -579,111 +577,313 @@ class StudentResponseEvaluator:
             raise
 
     def _extract_performance_summary(self, content: str) -> Dict[str, Any]:
-        """Extract performance_summary section from raw content."""
+        """Extract performance_summary section from raw content in both English and Chinese."""
         try:
-            # Look for performance_summary section
-            pattern = r'"?"Performance Summary"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                summary_content = '{' + match.group(1) + '}'
-                try:
-                    return json.loads(summary_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for performance_summary section in both languages
+            # English: "Performance Summary", Chinese: "表現摘要"
+            patterns = [
+                r'"?(?:Performance Summary|表現摘要)"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}',
+                r'"?(?:performance_summary)"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    summary_content = '{' + match.group(1) + '}'
+                    try:
+                        parsed_summary = json.loads(summary_content)
+                        # Normalize field names to translation keys
+                        return self._normalize_performance_summary_fields(parsed_summary)
+                    except json.JSONDecodeError:
+                        continue
             return {}
         except Exception:
             return {}
 
+    def _normalize_performance_summary_fields(self, summary: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize performance summary field names to use translation keys."""
+        field_mappings = {
+            # English to translation keys
+            "Total Issues": t("total_issues"),
+            "Identified Count": t("identified_count"), 
+            "Accuracy Percentage": t("accuracy_percentage"),
+            "Missed Count": t("missed_count"),
+            "Overall Assessment": t("overall_assessment"),
+            "Completion Status": t("completion_status"),
+            # Chinese to translation keys
+            "總問題數": t("total_issues"),
+            "識別數量": t("identified_count"),
+            "準確率百分比": t("accuracy_percentage"), 
+            "遺漏數量": t("missed_count"),
+            "整體評估": t("overall_assessment"),
+            "完成狀態": t("completion_status"),
+            # Already normalized keys (pass through)
+            t("total_issues"): t("total_issues"),
+            t("identified_count"): t("identified_count"),
+            t("accuracy_percentage"): t("accuracy_percentage"),
+            t("missed_count"): t("missed_count"),
+            t("overall_assessment"): t("overall_assessment"),
+            t("completion_status"): t("completion_status")
+        }
+        
+        normalized = {}
+        for key, value in summary.items():
+            normalized_key = field_mappings.get(key, key)
+            normalized[normalized_key] = value
+        return normalized
+
     def _extract_identified_issues(self, content: str) -> List[Dict[str, Any]]:
-        """Extract correctly_identified_issues section from raw content."""
+        """Extract correctly_identified_issues section from raw content in both languages."""
         try:
-            pattern = r'"?correctly_identified_issues"?\s*:\s*\[(.*?)\]'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                issues_content = '[' + match.group(1) + ']'
-                try:
-                    return json.loads(issues_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for identified issues in both languages
+            # English: "correctly_identified_issues", "Correctly Identified Issues" 
+            # Chinese: "正確識別的問題"
+            patterns = [
+                r'"?(?:correctly_identified_issues|Correctly Identified Issues|正確識別的問題)"?\s*:\s*\[(.*?)\]',
+                r'"?(?:Identified Problems|已識別問題)"?\s*:\s*\[(.*?)\]'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    issues_content = '[' + match.group(1) + ']'
+                    try:
+                        parsed_issues = json.loads(issues_content)
+                        return [self._normalize_issue_fields(issue) for issue in parsed_issues]
+                    except json.JSONDecodeError:
+                        continue
             return []
         except Exception:
             return []
 
     def _extract_missed_issues(self, content: str) -> List[Dict[str, Any]]:
-        """Extract missed_issues section from raw content."""
+        """Extract missed_issues section from raw content in both languages."""
         try:
-            pattern = r'"?missed_issues"?\s*:\s*\[(.*?)\]'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                issues_content = '[' + match.group(1) + ']'
-                try:
-                    return json.loads(issues_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for missed issues in both languages
+            # English: "missed_issues", "Missed Issues"
+            # Chinese: "遺漏問題", "遺漏的問題"
+            patterns = [
+                r'"?(?:missed_issues|Missed Issues|遺漏問題|遺漏的問題)"?\s*:\s*\[(.*?)\]',
+                r'"?(?:Missed Problems|遺漏問題)"?\s*:\s*\[(.*?)\]'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    issues_content = '[' + match.group(1) + ']'
+                    try:
+                        parsed_issues = json.loads(issues_content)
+                        return [self._normalize_issue_fields(issue) for issue in parsed_issues]
+                    except json.JSONDecodeError:
+                        continue
             return []
         except Exception:
             return []
+
+    def _normalize_issue_fields(self, issue: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize issue field names to use translation keys."""
+        field_mappings = {
+            # English to translation keys
+            "Issue Description": t("issue_description"),
+            "Problem": t("problem"),
+            "Student Comment": t("student_comment"),
+            "Praise Comment": t("praise_comment"),
+            "Why This Error Is Important": t("why_important"),
+            "How to Find This Error": t("how_to_find"),
+            "hint": t("hint"),
+            "Feedback": t("feedback"),
+            "Accuracy": t("accuracy"),
+            "Meaningfulness": t("meaningfulness"),
+            # Chinese to translation keys  
+            "問題描述": t("issue_description"),
+            "問題": t("problem"),
+            "學生評論": t("student_comment"),
+            "讚美評論": t("praise_comment"),
+            "為什麼這個錯誤很重要": t("why_important"),
+            "如何找到": t("how_to_find"),
+            "提示": t("hint"),
+            "反饋": t("feedback"),
+            "準確度": t("accuracy"),
+            "有意義性": t("meaningfulness")
+        }
+        
+        normalized = {}
+        for key, value in issue.items():
+            normalized_key = field_mappings.get(key, key)
+            normalized[normalized_key] = value
+        
+        return normalized
 
     def _extract_tips_for_improvement(self, content: str) -> List[Dict[str, Any]]:
-        """Extract tips_for_improvement section from raw content."""
+        """Extract tips_for_improvement section from raw content in both languages."""
         try:
-            pattern = r'"?tips_for_improvement"?\s*:\s*\[(.*?)\]'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                tips_content = '[' + match.group(1) + ']'
-                try:
-                    return json.loads(tips_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for tips in both languages
+            # English: "tips_for_improvement", "Tips for Improvement"
+            # Chinese: "改進建議"
+            patterns = [
+                r'"?(?:tips_for_improvement|Tips for Improvement|改進建議)"?\s*:\s*\[(.*?)\]'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    tips_content = '[' + match.group(1) + ']'
+                    try:
+                        parsed_tips = json.loads(tips_content)
+                        return [self._normalize_tip_fields(tip) for tip in parsed_tips]
+                    except json.JSONDecodeError:
+                        continue
             return []
         except Exception:
             return []
+
+    def _normalize_tip_fields(self, tip: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize tip field names to use translation keys."""
+        field_mappings = {
+            # English to translation keys
+            "Category": t("category"),
+            "Tip": t("tip"),
+            "Example": t("example"),
+            # Chinese to translation keys
+            "類別": t("category"),
+            "提示": t("tip"),
+            "範例": t("example")
+        }
+        
+        normalized = {}
+        for key, value in tip.items():
+            normalized_key = field_mappings.get(key, key)
+            normalized[normalized_key] = value
+        
+        return normalized
 
     def _extract_java_specific_guidance(self, content: str) -> List[Dict[str, Any]]:
-        """Extract java_specific_guidance section from raw content."""
+        """Extract java_specific_guidance section from raw content in both languages."""
         try:
-            pattern = r'"?java_specific_guidance"?\s*:\s*\[(.*?)\]'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                guidance_content = '[' + match.group(1) + ']'
-                try:
-                    return json.loads(guidance_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for Java guidance in both languages
+            # English: "java_specific_guidance", "Java-Specific Guidance", "Java Specific Guidance"
+            # Chinese: "Java特定指導"
+            patterns = [
+                r'"?(?:java_specific_guidance|Java-Specific Guidance|Java Specific Guidance|Java特定指導)"?\s*:\s*\[(.*?)\]'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    guidance_content = '[' + match.group(1) + ']'
+                    try:
+                        parsed_guidance = json.loads(guidance_content)
+                        return [self._normalize_guidance_fields(guidance) for guidance in parsed_guidance]
+                    except json.JSONDecodeError:
+                        continue
             return []
         except Exception:
             return []
+
+    def _normalize_guidance_fields(self, guidance: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize guidance field names to use translation keys."""
+        field_mappings = {
+            # English to translation keys
+            "Topic": t("topic"),
+            "Guidance": t("guidance"),
+            # Chinese to translation keys
+            "主題": t("topic"),
+            "指導": t("guidance")
+        }
+        
+        normalized = {}
+        for key, value in guidance.items():
+            normalized_key = field_mappings.get(key, key)
+            normalized[normalized_key] = value
+        
+        return normalized
 
     def _extract_encouragement_and_next_steps(self, content: str) -> Dict[str, Any]:
-        """Extract encouragement_and_next_steps section from raw content."""
+        """Extract encouragement_and_next_steps section from raw content in both languages."""
         try:
-            pattern = r'"?encouragement_and_next_steps"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                encouragement_content = '{' + match.group(1) + '}'
-                try:
-                    return json.loads(encouragement_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for encouragement in both languages
+            # English: "encouragement_and_next_steps", "Encouragement & Next Steps"
+            # Chinese: "鼓勵與下一步"
+            patterns = [
+                r'"?(?:encouragement_and_next_steps|Encouragement & Next Steps|Encouragement and Next Steps|鼓勵與下一步)"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    encouragement_content = '{' + match.group(1) + '}'
+                    try:
+                        parsed_encouragement = json.loads(encouragement_content)
+                        return self._normalize_encouragement_fields(parsed_encouragement)
+                    except json.JSONDecodeError:
+                        continue
             return {}
         except Exception:
             return {}
 
+    def _normalize_encouragement_fields(self, encouragement: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize encouragement field names to use translation keys."""
+        field_mappings = {
+            # English to translation keys
+            "Positive Feedback": t("positive_feedback"),
+            "Next Focus Areas": t("next_focus_areas"),
+            "Learning Objectives": t("learning_objectives"),
+            # Chinese to translation keys
+            "正面反饋": t("positive_feedback"),
+            "下一個重點領域": t("next_focus_areas"),
+            "學習目標": t("learning_objectives")
+        }
+        
+        normalized = {}
+        for key, value in encouragement.items():
+            normalized_key = field_mappings.get(key, key)
+            normalized[normalized_key] = value
+        
+        return normalized
+
     def _extract_detailed_feedback(self, content: str) -> Dict[str, Any]:
-        """Extract detailed_feedback section from raw content."""
+        """Extract detailed_feedback section from raw content in both languages."""
         try:
-            pattern = r'"?detailed_feedback"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                feedback_content = '{' + match.group(1) + '}'
-                try:
-                    return json.loads(feedback_content)
-                except json.JSONDecodeError:
-                    pass
+            # Look for detailed feedback in both languages  
+            # English: "detailed_feedback", "Detailed Feedback"
+            # Chinese: "詳細反饋"
+            patterns = [
+                r'"?(?:detailed_feedback|Detailed Feedback|詳細反饋)"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    feedback_content = '{' + match.group(1) + '}'
+                    try:
+                        parsed_feedback = json.loads(feedback_content)
+                        return self._normalize_detailed_feedback_fields(parsed_feedback)
+                    except json.JSONDecodeError:
+                        continue
             return {}
         except Exception:
             return {}
-    
+
+    def _normalize_detailed_feedback_fields(self, feedback: Dict[str, Any]) -> Dict[str, Any]:
+        """Normalize detailed feedback field names to use translation keys."""
+        field_mappings = {
+            # English to translation keys
+            "Strengths Identified": t("strengths_identified"),
+            "Improvement Patterns": t("improvement_patterns"),
+            "Review Approach Feedback": t("review_approach_feedback"),
+            # Chinese to translation keys
+            "已識別優點": t("strengths_identified"),
+            "改進模式": t("improvement_patterns"),
+            "審查方法反饋": t("review_approach_feedback")
+        }
+        
+        normalized = {}
+        for key, value in feedback.items():
+            normalized_key = field_mappings.get(key, key)
+            normalized[normalized_key] = value
+        
+        return normalized
+
     def _generate_fallback_comparison_report(self, review_analysis: Dict[str, Any], review_history: List[Dict[str, Any]] = None) -> str:
         """
         Generate a basic comparison report when LLM fails.
