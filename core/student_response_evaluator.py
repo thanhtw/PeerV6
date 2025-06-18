@@ -480,10 +480,10 @@ class StudentResponseEvaluator:
                 
             # Create the prompt for the LLM
             prompt = create_comparison_report_prompt(review_analysis)
-            print("\n\nPROMPT OUT: ",prompt)
+            
             # Generate the report with the LLM
             response = self.llm.invoke(prompt)
-            print("\n RESPONSE OUT: ",response)
+           
             # Process the response
             if hasattr(response, 'content'):
                 report = response.content
@@ -549,26 +549,27 @@ class StudentResponseEvaluator:
             
             # Initialize the report structure
             formatted_report = {}
-            
+            print("\n\nParsed Data:", parsed_data)
+            print("\n\nRaw Content:", raw_content)
             # Extract each required section from parsed_data or raw_content
             if parsed_data and isinstance(parsed_data, dict):
                 # Extract from parsed JSON
-                formatted_report["performance_summary"] = parsed_data.get("performance_summary", {})
-                formatted_report["correctly_identified_issues"] = parsed_data.get("correctly_identified_issues", [])
-                formatted_report["missed_issues"] = parsed_data.get("missed_issues", [])
-                formatted_report["tips_for_improvement"] = parsed_data.get("tips_for_improvement", [])
-                formatted_report["java_specific_guidance"] = parsed_data.get("java_specific_guidance", [])
-                formatted_report["encouragement_and_next_steps"] = parsed_data.get("encouragement_and_next_steps", {})
-                formatted_report["detailed_feedback"] = parsed_data.get("detailed_feedback", {})
+                formatted_report[t("performance_summary")] = parsed_data.get(t("performance_summary"), {})
+                formatted_report[t("correctly_identified_issues")] = parsed_data.get(t("correctly_identified_issues"), [])
+                formatted_report[t("missed_issues")] = parsed_data.get(t("missed_issues"), [])
+                formatted_report[t("tips_for_improvement")] = parsed_data.get(t("tips_for_improvement"), [])
+                formatted_report[t("java_specific_guidance")] = parsed_data.get(t("java_specific_guidance"), [])
+                formatted_report[t("encouragement_and_next_steps")] = parsed_data.get(t("encouragement_and_next_steps"), {})
+                formatted_report[t("detailed_feedback")] = parsed_data.get(t("detailed_feedback"), {})
             else:
                 # Extract from raw text using regex patterns
-                formatted_report["performance_summary"] = self._extract_performance_summary(raw_content)
-                formatted_report["correctly_identified_issues"] = self._extract_identified_issues(raw_content)
-                formatted_report["missed_issues"] = self._extract_missed_issues(raw_content)
-                formatted_report["tips_for_improvement"] = self._extract_tips_for_improvement(raw_content)
-                formatted_report["java_specific_guidance"] = self._extract_java_specific_guidance(raw_content)
-                formatted_report["encouragement_and_next_steps"] = self._extract_encouragement_and_next_steps(raw_content)
-                formatted_report["detailed_feedback"] = self._extract_detailed_feedback(raw_content)
+                formatted_report[t("performance_summary")] = self._extract_performance_summary(raw_content)
+                formatted_report[t("correctly_identified_issues")] = self._extract_identified_issues(raw_content)
+                formatted_report[t("missed_issues")] = self._extract_missed_issues(raw_content)
+                formatted_report[t("tips_for_improvement")] = self._extract_tips_for_improvement(raw_content)
+                formatted_report[t("java_specific_guidance")] = self._extract_java_specific_guidance(raw_content)
+                formatted_report[t("encouragement_and_next_steps")] = self._extract_encouragement_and_next_steps(raw_content)
+                formatted_report[t("detailed_feedback")] = self._extract_detailed_feedback(raw_content)
             
             # Return as formatted JSON string
             return json.dumps(formatted_report, indent=2, ensure_ascii=False)
@@ -581,7 +582,7 @@ class StudentResponseEvaluator:
         """Extract performance_summary section from raw content."""
         try:
             # Look for performance_summary section
-            pattern = r'"?performance_summary"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
+            pattern = r'"?"Performance Summary"?\s*:\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}'
             match = re.search(pattern, content, re.DOTALL)
             if match:
                 summary_content = '{' + match.group(1) + '}'
