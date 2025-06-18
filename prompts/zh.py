@@ -68,6 +68,7 @@ class PromptTemplate:
         code: str,
         error_instructions: str        
     ) -> str:
+        """Function-based template for evaluation prompt."""
         base_prompt = f"""你是一位 Java 程式碼品質專家，負責分析程式碼以驗證是否正確實作了特定請求的錯誤。
 
     任務：
@@ -121,11 +122,7 @@ class PromptTemplate:
     - "有效" = true 只有在恰好實作了 {error_count} 個請求錯誤時
     - 僅專注於指定的錯誤，不是一般的程式碼品質問題
     - 確保每個識別的錯誤真正符合請求的錯誤
-    """.format(
-        error_count=error_count,
-        code=code,
-        error_instructions=error_instructions
-    )
+    """
         
         language_instructions = get_llm_prompt_instructions(self.language)
         if language_instructions:
