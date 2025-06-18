@@ -323,9 +323,11 @@ class TutorialUI:
             total_errors = stats.get('total_errors', 0)
             total_categories = stats.get('total_categories', 0)
             practice_stats = {}
+            
             if user_id:
-                practice_data = self.practice_tracker.get_user_practice_data(user_id)
+                practice_data = self.practice_tracker.get_user_practice_data(user_id)              
                 practice_stats = practice_data.get(t('practice_stats'), {})
+                
                 
 
         except Exception as e:
@@ -351,7 +353,7 @@ class TutorialUI:
                         <div class="stat-label-compact">{t('categories')}</div>
                     </div>                   
                     <div class="stat-card-enhanced success">
-                        <div class="stat-number-enhanced">{practice_stats.get(t('total_practiced'), 0)}</div>
+                        <div class="stat-number-enhanced">{practice_stats.get('total_practiced', 0)}</div>
                         <div class="stat-label-enhanced">{t('practiced')}</div>
                     </div>                                     
                 </div>

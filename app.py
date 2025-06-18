@@ -103,7 +103,7 @@ def main():
     
     # Check if the user is authenticated
     if not auth_ui.is_authenticated():
-        render_language_selector()
+        # render_language_selector()
         is_authenticated = auth_ui.render_auth_page()
         if not is_authenticated:
             return
@@ -172,7 +172,7 @@ def main():
         st.stop()
 
     # Add language selector to sidebar
-    render_language_selector()
+    #render_language_selector()
     
     # Render user profile with total points instead of score
     auth_ui.render_combined_profile_leaderboard()

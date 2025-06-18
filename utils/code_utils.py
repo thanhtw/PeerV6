@@ -477,6 +477,7 @@ def create_feedback_prompt(review_analysis: Dict[str, Any], iteration: int = 1,
         Feedback prompt string
     """
     try:
+        print(f"\nreview_analysis of {review_analysis}")
         prompt_template = get_prompt_template_instance()
         prompt = prompt_template.create_feedback_prompt_template(
             iteration=iteration,

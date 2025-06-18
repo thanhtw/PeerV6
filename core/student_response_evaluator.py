@@ -393,7 +393,7 @@ class StudentResponseEvaluator:
                 t("accuracy_percentage"): review_analysis[t('accuracy_percentage')]
             }
 
-            logger.debug(t("generating_concise_targeted_guidance").format(iteration_count=iteration_count))
+            logger.info(t("generating_concise_targeted_guidance").format(iteration_count=iteration_count))
             response = self.llm.invoke(prompt)
             guidance = process_llm_response(response)
             
@@ -403,7 +403,7 @@ class StudentResponseEvaluator:
                 # Split into sentences and take the first 3-4
                 sentences = re.split(r'(?<=[.!?])\s+', guidance)
                 guidance = ' '.join(sentences[:4])
-                logger.debug(t("trimmed_guidance_words").format(
+                logger.info(t("trimmed_guidance_words").format(
                     before=len(guidance.split()), 
                     after=len(guidance.split())
                 ))
@@ -422,7 +422,7 @@ class StudentResponseEvaluator:
                 t("identified_count"): review_analysis[t('identified_count')],
                 t("total_problems"): review_analysis[t('total_problems')],
                 t("error"): str(e)
-            }
+            }            
             
             # Log the error
             self.llm_logger.log_interaction(

@@ -51,7 +51,6 @@ class MySQLAuthManager:
         """Hash a password using SHA-256."""
         return hashlib.sha256(password.encode()).hexdigest()
     
-
     def register_user(self, email: str, password: str, display_name_en: str = None, display_name_zh: str = None,
                  level_name_en: str = None, 
                  level_name_zh: str = None) -> Dict[str, Any]:

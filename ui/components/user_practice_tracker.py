@@ -88,7 +88,7 @@ class UserPracticeTracker:
             unpracticed_errors = [error for error in all_errors if error.get('error_code') not in practiced_codes]
             
             # Get overall practice statistics
-            stats_query = """
+            stats_query = f"""
             SELECT 
                 COUNT(*) as total_practiced,
                 SUM(CASE WHEN completion_status = 'completed' THEN 1 ELSE 0 END) as completed_count,
