@@ -948,7 +948,7 @@
     "explanation": "解釋",
     "feedback": "反饋",
     "meaningfulness": "有意義性",
-    "review_sufficientness": "審查充分性",
+    "review_sufficient": "審查充分性",
     "accuracy_percentage": "準確率百分比",
     "issue_description": "問題描述",
     "praise_comment": "讚美評論",
@@ -956,6 +956,7 @@
     "topic": "主題",
     "guidance": "指導",
     "current": "當前",
-    "iterations": "迭代"
+    "iterations": "迭代",
+    "iteration_count": "迭代次數"
   }
 }

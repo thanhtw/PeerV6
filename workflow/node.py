@@ -419,31 +419,31 @@ class WorkflowNodes:
                 # Create fallback analysis
                 original_error_count = getattr(state, 'original_error_count', 1)
                 analysis = {
-                    "identified_count": 0,
-                    "total_problems": original_error_count,
-                    "identified_percentage": 0,
-                    "review_sufficient": False,
-                    "error": f"Evaluation failed: {str(eval_error)}"
+                    t("identified_count"): 0,
+                    t("total_problems"): original_error_count,
+                    t("identified_percentage"): 0,
+                    t("review_sufficient"): False,
+                    t("error"): f"Evaluation failed: {str(eval_error)}"
                 }
             
             # FIXED: Update analysis with proper metrics and review_sufficient evaluation
             original_error_count = getattr(state, 'original_error_count', 1)
-            identified_count = analysis.get('identified_count', 0)
+            identified_count = analysis.get(t('identified_count'), 0)
             
             # Ensure counts are reasonable
             if identified_count > original_error_count:
                 identified_count = original_error_count
-                analysis['identified_count'] = identified_count
+                analysis[t('identified_count')] = identified_count
             
-            analysis['total_problems'] = original_error_count
-            analysis['identified_percentage'] = (identified_count / original_error_count) * 100 if original_error_count > 0 else 0
-            analysis['accuracy_percentage'] = analysis['identified_percentage']
+            analysis[t('total_problems')] = original_error_count
+            analysis[t('identified_percentage')] = (identified_count / original_error_count) * 100 if original_error_count > 0 else 0
+            analysis[t('accuracy_percentage')] = analysis[t('identified_percentage')]
             
             # FIXED: Evaluate review sufficiency using clear criteria
             from workflow.conditions import WorkflowConditions
             is_sufficient = WorkflowConditions.evaluate_review_sufficiency(state, analysis)
-            
-            analysis['review_sufficient'] = is_sufficient
+            print(f"\nReview sufficiency evaluated as: {is_sufficient}")
+            analysis[t('review_sufficient')] = is_sufficient
             state.review_sufficient = is_sufficient
             
             if is_sufficient:

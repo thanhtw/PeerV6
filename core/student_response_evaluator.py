@@ -88,7 +88,7 @@ class StudentResponseEvaluator:
                 logger.debug("Sending student review to LLM for evaluation")
                 response = self.llm.invoke(prompt)
                 processed_response = process_llm_response(response)
-
+               
                 # Log the interaction
                 self.llm_logger.log_review_analysis(prompt, processed_response, metadata)
                 
@@ -98,9 +98,11 @@ class StudentResponseEvaluator:
                     return ""
                 
                 # Extract JSON data from the response
-                analysis_data = self._extract_json_from_text(processed_response)   
+                analysis_data = self._extract_json_from_text(processed_response)       
+                print(f"\nRaw analysis data: {analysis_data}")  # Debugging output          
                 # Process the analysis data
-                enhanced_analysis = self._process_enhanced_analysis(analysis_data, known_problems)               
+                enhanced_analysis = self._process_enhanced_analysis(analysis_data, known_problems)   
+                print(f"\nEnhanced analysis: {enhanced_analysis}")  # Debugging output            
                 return enhanced_analysis
                 
             except Exception as e:
@@ -196,7 +198,7 @@ class StudentResponseEvaluator:
                     
             # For the specific broken format in the example
             # Look for key JSON fields and try to reconstruct a valid JSON
-            identified_problems_match = re.search(r'"(已識別的問題|Identified Problems)"\s*:\s*\[(.*?)\]', text, re.DOTALL)
+            identified_problems_match = re.search(r'"(已識別問題|Identified Problems)"\s*:\s*\[(.*?)\]', text, re.DOTALL)
             
             # Fallback manual extraction when JSON is severely malformed
             analysis = {}
@@ -252,12 +254,12 @@ class StudentResponseEvaluator:
             
             # Extract other fields similarly (missed problems, counts, etc.)
             # Example for identified count
-            identified_count_match = re.search(r'"(已識別數量|Identified Count)"\s*:\s*(\d+)', text)
+            identified_count_match = re.search(r'"(識別數量|Identified Count)"\s*:\s*(\d+)', text)
             if identified_count_match:
                 analysis[t("identified_count")] = int(identified_count_match.group(2))
                 
             # Example for total problems
-            total_problems_match = re.search(r'"(總問題數|Total Problems)"\s*:\s*(\d+)', text)
+            total_problems_match = re.search(r'"(問題總數|Total Problems)"\s*:\s*(\d+)', text)
             if total_problems_match:
                 analysis[t("total_problems")] = int(total_problems_match.group(2))
                 
@@ -267,14 +269,14 @@ class StudentResponseEvaluator:
                 analysis[t("identified_percentage")] = float(percentage_match.group(2))
                 
             # Example for review sufficient
-            sufficient_match = re.search(r'"(審查足夠|Review Sufficient)"\s*:\s*(true|false)', text, re.IGNORECASE)
+            sufficient_match = re.search(r'"(審查充分性|Review Sufficient)"\s*:\s*(true|false)', text, re.IGNORECASE)            
             if sufficient_match:
-                analysis[t("review_sufficient")] = sufficient_match.group(2).lower() == "true"
+                analysis[t("review_sufficient")] = bool(sufficient_match.group(2))
             
             # Try to extract missed problems array separately
-            missed_problems_match = re.search(r'"(遺漏的問題|Missed Problems)"\s*:\s*\[(.*?)\]', text, re.DOTALL)
+            missed_problems_match = re.search(r'"(遺漏問題|Missed Problems)"\s*:\s*\[(.*?)\]', text, re.DOTALL)
+
             if missed_problems_match:
-               
                 # Parse the missed_text to extract problem objects
                 #analysis[t("missed_problems")] = missed_problems
                 missed_text = missed_problems_match.group(2).strip()
@@ -330,15 +332,7 @@ class StudentResponseEvaluator:
                 
             # If all else fails, return a minimal valid structure
             logger.warning(t("could_not_extract_json_from_response"))
-            return {
-                t("identified_problems"): [],
-                t("missed_problems"): [],
-                t("identified_count"): 0,
-                t("total_problems"): 0,
-                t("identified_percentage"): 0,
-                t("review_sufficient"): False,
-                t("feedback"): t("analysis_could_not_extract_feedback")
-            }
+            return []
             
         except Exception as e:
             logger.error(f"{t('error_extracting_json')}: {str(e)}")
@@ -386,7 +380,7 @@ class StudentResponseEvaluator:
             #prompt += "\n\nIMPORTANT: Focus on helping the student make more meaningful comments. A good comment should clearly explain WHAT the issue is and WHY it's a problem, not just identify where it is. For example, instead of just 'Line 11: null issue', guide them to write 'Line 11: Object is accessed before null check, which could cause NullPointerException'."
 
             metadata = {
-                t("iteration"): iteration_count,
+                t("iteration_count"): iteration_count,
                 t("max_iterations"): max_iterations,
                 t("identified_count"):  review_analysis[t('identified_count')],
                 t("total_problems"): review_analysis[t('total_problems')],
@@ -417,7 +411,7 @@ class StudentResponseEvaluator:
             
             # Create error metadata with translated keys
             error_metadata = {
-                t("iteration"): iteration_count,
+                t("iteration_count"): iteration_count,
                 t("max_iterations"): max_iterations,
                 t("identified_count"): review_analysis[t('identified_count')],
                 t("total_problems"): review_analysis[t('total_problems')],

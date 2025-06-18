@@ -248,7 +248,7 @@ class PromptTemplate:
     "Identified Count": 1,
     "Total Problems": {problem_count},
     "Identified Percentage": 25.0,
-    "Review Sufficient": false,
+    "Review Sufficient": False,
     "Feedback": "Overall assessment with specific improvement suggestions"
     }}
     ```
@@ -329,7 +329,7 @@ class PromptTemplate:
     ) -> str:
         """Function-based template for comparison report prompt."""
         # Use format() for complex templates with JSON
-        base_prompt = """You are an educational assessment expert creating a comprehensive code review feedback report for a Java programming student.
+        base_prompt = f"""You are an educational assessment expert creating a comprehensive code review feedback report for a Java programming student.
 
     STUDENT PERFORMANCE:
     - Total issues in code: {total_problems}
@@ -341,8 +341,6 @@ class PromptTemplate:
 
     MISSED ISSUES:
     {missed_text}
-
-    {progress_info}
 
     TASK:
     Create an educational JSON report that helps the student improve their Java code review skills.

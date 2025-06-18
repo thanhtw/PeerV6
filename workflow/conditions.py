@@ -156,10 +156,12 @@ class WorkflowConditions:
             bool: True if review is sufficient, False otherwise
         """
         try:
+            print(f"Analysis result in condition: ",analysis)
             identified_count = analysis.get(t("identified_count"), 0)
             total_problems = analysis.get(t("total_problems"), 0)
             original_error_count = getattr(state, "original_error_count", 0)
-            
+            print(f"Evaluating review sufficiency: identified_count={identified_count}, "
+                  f"total_problems={total_problems}, original_error_count={original_error_count}")  
             # Use original_error_count as the authoritative source
             if original_error_count > 0:
                 total_problems = original_error_count
@@ -177,15 +179,15 @@ class WorkflowConditions:
             # Criterion 1: All errors found (100% accuracy)
             if identified_count >= total_problems:
                 is_sufficient = True
-                logger.debug(f"Review sufficient: All {total_problems} errors found (100%)")
+                logger.info(f"Review sufficient: All {total_problems} errors found (100%)")
             
             # Criterion 2: High accuracy threshold (90%+)
             elif accuracy_percentage >= 90.0:
                 is_sufficient = True
-                logger.debug(f"Review sufficient: High accuracy ({accuracy_percentage:.1f}% >= 90%)")
+                logger.info(f"Review sufficient: High accuracy ({accuracy_percentage:.1f}% >= 90%)")
             
             else:
-                logger.debug(f"Review not sufficient: {identified_count}/{total_problems} "
+                logger.info(f"Review not sufficient: {identified_count}/{total_problems} "
                            f"({accuracy_percentage:.1f}%) - needs 90%+ or all errors")
             
             return is_sufficient

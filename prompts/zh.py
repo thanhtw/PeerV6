@@ -243,7 +243,7 @@ class PromptTemplate:
         "反饋": "對此識別的簡要回饋"
         }}
     ],
-    "": [遺漏問題
+    "遺漏問題": [
         {{
         "問題": "特定已知問題文字 - 未解決",
         "提示": "找到此問題的教育提示"
@@ -252,7 +252,7 @@ class PromptTemplate:
     "識別數量": 1,
     "問題總數": {problem_count},
     "識別百分比": 25.0,
-    "審查充分性": false,
+    "審查充分性": False,
     "反饋": "整體評估與具體改進建議"
     }}
     ```
@@ -336,7 +336,7 @@ class PromptTemplate:
     ) -> str:
         """Function-based template for comparison report prompt."""
         # Use format() for complex templates with JSON
-        base_prompt = """你是一位教育評估專家，為 Java 程式設計學生創建綜合性的程式碼評審回饋報告。
+        base_prompt = f"""你是一位教育評估專家，為 Java 程式設計學生創建綜合性的程式碼評審回饋報告。
 
     學生表現：
     - 程式碼中的總問題數：{total_problems}
