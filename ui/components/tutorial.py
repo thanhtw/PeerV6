@@ -193,7 +193,7 @@ class TutorialUI:
                             time_spent_seconds=0
                         )
 
-                    st.success(f"✅ {t('review_analysis_complete')}")
+                    # st.success(f"✅ {t('review_analysis_complete')}")
                 else:                    
                     st.info(f"📝 {t('review_submitted_try_improve')}")
                 

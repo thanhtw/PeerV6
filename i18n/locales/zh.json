@@ -964,7 +964,11 @@
 
     "code_generated_with_warnings": "程式碼生成時出現警告",
     "code_generation_completed_switching_to_review_tab...": "程式碼生成已完成，正在切換到審查標籤...",
-    "code_generated_successfully_switching_to_review_tab...": "程式碼生成成功！正在切換到審查標籤..."
+    "code_generated_successfully_switching_to_review_tab...": "程式碼生成成功！正在切換到審查標籤...",
+    "generation_failed": "生成失敗",
+
+    "review_feedback_and_start_new_cycle": "審查反饋並開始新週期",
+    "start_by_generating_code": "從生成程式碼開始"
 
   }
 }

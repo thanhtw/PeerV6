@@ -943,10 +943,14 @@
     "guidance": "Guidance",
     "not_satisfied_with_the_result": "Not satisfied with the result?",
     "generate_a_new_code_snippet_with_the_same_configuration": "Generate a new code snippet with the same configuration",
-    
+
     "code_generated_with_warnings": "Code generated with warnings",
     "code_generation_completed_switching_to_review_tab...": "Code generation completed. Switching to review tab...",
-    "code_generated_successfully_switching_to_review_tab...": "Code generated successfully! Switching to review tab..."
+    "code_generated_successfully_switching_to_review_tab...": "Code generated successfully! Switching to review tab...",
+    "generation_failed": "Generation failed",
+
+    "review_feedback_and_start_new_cycle": "Review feedback and start a new cycle",
+    "start_by_generating_code": "Start by generating code"
 
     
   }

@@ -677,14 +677,14 @@ class CodeGeneratorUI:
                 st.rerun()
                 
             elif has_error:                              
-                st.error(f"❌ Generation failed: {error}")
-                logger.error(f"Code generation failed with error: {error}")
+                st.error(f"❌ {t('generation_failed')}: {error}")
+                logger.error(f"{t('generation_failed')}: {error}")
                 
             else:               
-                st.error("❌ Failed to generate code. Please try again.")
+                st.error(f"❌ {t('generation_failed')}.")
                 logger.warning("Code generation completed but no code snippet was created and no error message")
                 
         except Exception as e:
-            logger.error(f"Error handling generation result: {str(e)}")
+            logger.error(f"{t('generation_failed')}: {str(e)}")
             st.error(f"❌ Error processing generation result: {str(e)}")
     
