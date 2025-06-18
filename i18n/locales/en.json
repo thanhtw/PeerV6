@@ -584,6 +584,7 @@
     "solution": "Solution",
     "try_adjusting_filters": "Try adjusting your search criteria or filters to find more results",
     "why_important": "Why This Error Is Important",
+    "how_to_find": "How to Find This Error",
     "error_importance_explanation": "Understanding this error helps you write more robust and reliable code",
     "your_progress": "Your Progress",
     "practiced": "Practiced",
@@ -811,7 +812,7 @@
     "explore_more_errors": "Explore More Errors",
     "view_dashboard": "View Dashboard",
     "total_issues": "Total Issues",
-    "missed_count": "Missed",
+    "missed_count": "Missed Count",
     "overall_assessment": "Overall Assessment",
     "completion_status": "Completion Status",
     "found": "Found",
@@ -938,7 +939,8 @@
     "current": "Current",
     "iterations": "Iterations",
     "iteration_count": "Iteration Count",
-    "you": "You"
+    "you": "You",
+    "guidance": "Guidance"
     
   }
 }

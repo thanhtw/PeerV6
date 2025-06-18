@@ -200,7 +200,7 @@ class PromptTemplate:
     ) -> str:
         """Function-based template for review analysis prompt."""
         # Use format() for complex templates with JSON
-        base_prompt = """你是一位教育評估專家，負責分析學生的 Java 程式碼評審技能。
+        base_prompt = f"""你是一位教育評估專家，負責分析學生的 Java 程式碼評審技能。
 
     任務：
     分析學生在程式碼評審過程中識別已知問題的有效性。

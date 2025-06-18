@@ -68,7 +68,7 @@ class PromptTemplate:
     ) -> str:
         """Function-based template for evaluation prompt."""
         # Use format() instead of f-strings for complex templates with JSON
-        base_prompt = """You are a Java code quality expert analyzing code to verify correct implementation of specific requested errors.
+        base_prompt = f"""You are a Java code quality expert analyzing code to verify correct implementation of specific requested errors.
 
           TASK:
           Evaluate if the provided Java code correctly implements EXACTLY {error_count} specific errors from the requested list.
@@ -100,7 +100,7 @@ class PromptTemplate:
               "Error Type": "Logical",
               "Error Name": "Misunderstanding of short-circuit evaluation",
               "Line Number": 42,
-              "Code Segment": "if (obj != null & obj.getValue() > 0) {{ ... }}",
+              "Code Segment": "if (obj != null & obj.getValue() > 0)",
               "Explanation": "Uses non-short-circuit '&' operator instead of '&&', causing obj.getValue() to evaluate even if obj is null, potentially causing NullPointerException."
               }}
           ],
@@ -356,49 +356,49 @@ class PromptTemplate:
     Return only a valid JSON object with these exact fields:
     ```json
     {{
-      "performance_summary": {{
-        "total_issues": {total_problems},
-        "identified_count": {identified_count},
-        "accuracy_percentage": {accuracy:.1f},
-        "missed_count": {missed_count},
-        "overall_assessment": "Brief overall assessment of the student's performance",
-        "completion_status": "Current status of the review (e.g., 'Excellent work', 'Good progress', 'Needs improvement')"
+      "Performance Summary": {{
+        "Total Issues": {total_problems},
+        "Identified Count": {identified_count},
+        "Accuracy Percentage": {accuracy:.1f},
+        "Missed Count": {missed_count},
+        "Overall Assessment": "Brief overall assessment of the student's performance",
+        "Completion Status": "Current status of the review (e.g., 'Excellent work', 'Good progress', 'Needs improvement')"
       }},
-      "correctly_identified_issues": [
+      "Correctly Identified Issues": [
         {{
-          "issue_description": "Description of the correctly identified issue",
-          "praise_comment": "Specific praise for finding this issue and what it shows about their skills"
+          "Issue Description": "Description of the correctly identified issue",
+          "Praise Comment": "Specific praise for finding this issue and what it shows about their skills"
         }}
       ],
-      "missed_issues": [
+      "Missed Issues": [
         {{
-          "issue_description": "Description of the missed issue",
-          "why_important": "Educational explanation of why this issue matters",
-          "how_to_find": "Specific guidance on how to identify this type of issue in the future"
+          "Issue Description": "Description of the missed issue",
+          "Why This Error Is Important": "Educational explanation of why this issue matters",
+          "How to Find This Error": "Specific guidance on how to identify this type of issue in the future"
         }}
       ],
-      "tips_for_improvement": [
+      "Tips for Improvement": [
         {{
-          "category": "Area for improvement (e.g., 'Logic Analysis', 'Syntax Review', 'Code Quality')",
-          "tip": "Specific, actionable advice",
+          "Category": "Area for improvement (e.g., 'Logic Analysis', 'Syntax Review', 'Code Quality')",
+          "Tip": "Specific, actionable advice",
           "example": "Brief example or technique to illustrate the tip"
         }}
       ],
-      "java_specific_guidance": [
+      "Java-Specific Guidance": [
         {{
-          "topic": "Java-specific area (e.g., 'Null Pointer Safety', 'Exception Handling', 'Type Safety')",
-          "guidance": "Specific advice for Java code review in this area"
+          "Topic": "Java-specific area (e.g., 'Null Pointer Safety', 'Exception Handling', 'Type Safety')",
+          "Guidance": "Specific advice for Java code review in this area"
         }}
       ],
-      "encouragement_and_next_steps": {{
-        "positive_feedback": "Encouraging comments about their progress and strengths",
-        "next_focus_areas": "What they should focus on in their next review attempt",
-        "learning_objectives": "Key learning goals based on their current performance"
+      "Encouragement & Next Steps": {{
+        "Positive Feedback": "Encouraging comments about their progress and strengths",
+        "Next Focus Areas": "What they should focus on in their next review attempt",
+        "Learning Objectives": "Key learning goals based on their current performance"
       }},
-      "detailed_feedback": {{
-        "strengths_identified": ["List of specific strengths shown in their review"],
-        "improvement_patterns": ["Patterns in what they missed that suggest areas for focused learning"],
-        "review_approach_feedback": "Feedback on their overall approach to code review"
+      "Detailed Feedback": {{
+        "Strengths Identified": ["List of specific strengths shown in their review"],
+        "Improvement Patterns": ["Patterns in what they missed that suggest areas for focused learning"],
+        "Review Approach Feedback": "Feedback on their overall approach to code review"
       }}
     }}
     ```

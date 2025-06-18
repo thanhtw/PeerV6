@@ -512,8 +512,8 @@ def create_comparison_report_prompt(review_analysis: Dict[str, Any]) -> str:
         print("\nidentified_count: ", review_analysis.get(t("identified_count"), 0))
         print("\naccuracy: ", review_analysis.get(t("accuracy"), 0))
         print("\nmissed_count: ", len(review_analysis.get(t("missed_problems"),0)))
-        print("\nidentified_text: ", review_analysis.get(t("identified_problems"), 0))
-        print("\nmissed_text: ", review_analysis.get(t("missed_problems"),0))
+        print("\nidentified_text: ", _format_found_errors_comparison_report(review_analysis.get(t("identified_problems"), 0)))
+        print("\nmissed_text: ", _format_found_errors_comparison_report(review_analysis.get(t("missed_problems"),0)))
       
 
         prompt_template = get_prompt_template_instance()
@@ -522,8 +522,8 @@ def create_comparison_report_prompt(review_analysis: Dict[str, Any]) -> str:
             identified_count=review_analysis.get(t("identified_count"), 0),
             accuracy=review_analysis.get(t("accuracy"), 0),
             missed_count=len(review_analysis.get(t("missed_problems"),0)),
-            identified_text=review_analysis.get(t("identified_problems"), 0),
-            missed_text=review_analysis.get(t("missed_problems"),0)
+            identified_text=_format_found_errors_comparison_report(review_analysis.get(t("identified_problems"), 0)),
+            missed_text=_format_found_errors_comparison_report(review_analysis.get(t("missed_problems"),0))
         )
         
         return prompt
@@ -574,6 +574,26 @@ def _format_found_errors(found_errors: List) -> str:
                 name = error.get(t("error_name"), "")
                 description = error.get(t("description"), "")
                 formatted.append(f"{i}. {error_type} - {name}: {description}")
+            else:
+                formatted.append(f"{i}. {str(error)}")
+        except Exception as e:
+            logger.warning(f"Error formatting found error {i}: {str(e)}")
+            continue
+    
+    return "\n".join(formatted)
+
+def _format_found_errors_comparison_report(found_errors: List) -> str:
+    """Format found errors for prompt inclusion."""
+    if not found_errors:
+        return t("no_found_errors")
+    
+    formatted = []
+    for i, error in enumerate(found_errors, 1):
+        try:
+            if isinstance(error, dict):
+                problem = error.get(t("problem"), "").upper()
+                student_comment = error.get(t("student_comment"), "")               
+                formatted.append(f"{i}. {problem} - {t('student_comment')}: {student_comment}")
             else:
                 formatted.append(f"{i}. {str(error)}")
         except Exception as e:
