@@ -950,7 +950,9 @@
     "generation_failed": "Generation failed",
 
     "review_feedback_and_start_new_cycle": "Review feedback and start a new cycle",
-    "start_by_generating_code": "Start by generating code"
+    "start_by_generating_code": "Start by generating code",
+    "time_spent_seconds": "Time Spent (seconds)",
+    "successful_completion": "Successful Completion"
 
     
   }

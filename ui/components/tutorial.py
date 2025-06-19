@@ -113,7 +113,7 @@ class TutorialUI:
             user_id = st.session_state.auth.get("user_id") if "auth" in st.session_state else None
             workflow_state = st.session_state.practice_workflow_state
             practice_error = st.session_state.get("practice_error_data", {})
-            error_code = practice_error.get('error_code', '')
+            error_code = practice_error.get(t('error_code'), '')
 
             if user_id:                         
                 _log_user_interaction_tutorial(
@@ -131,6 +131,7 @@ class TutorialUI:
 
             with st.spinner(f"🔄 {t('analyzing_your_review')}"):
                 # Submit review through workflow
+                start_time = time.time()
                 updated_state = self.workflow.submit_review(workflow_state, student_review)
                 # Update stored state
                 st.session_state.practice_workflow_state = updated_state
@@ -145,15 +146,16 @@ class TutorialUI:
                 analysis = latest_review.analysis if latest_review else {}
                 identified_count = analysis.get(t('identified_count'), 0)
                 total_problems = analysis.get(t('total_problems'), 0)
-                accuracy = (identified_count / total_problems * 100) if total_problems > 0 else 0
-             
+                accuracy = (identified_count / total_problems * 100) if total_problems > 0 else 0     
+                time_spent_seconds = time.time() - start_time          
                 if review_sufficient or current_iteration > max_iterations:
                     if user_id and error_code:
                         session_data = {
-                            'accuracy': accuracy,
-                            'time_spent_seconds': 0,  # Calculate actual time if needed
-                            'successful_completion': review_sufficient and identified_count == total_problems
+                            t('accuracy'): accuracy,
+                            t('time_spent_seconds'): time_spent_seconds,
+                            t('successful_completion'): review_sufficient and identified_count == total_problems
                         }
+                        
                         self.practice_tracker.complete_practice_session(user_id, error_code, session_data)
                         
                         # TRIGGER BADGE PROGRESS UPDATES
@@ -1510,6 +1512,7 @@ class TutorialUI:
             ):
                 # Add basic validation in the processing function instead
                 if student_review and student_review.strip():
+                    print("Enter Processing review:", student_review.strip())
                     self._process_practice_review_with_tracking(student_review.strip())
                 else:
                     st.warning(f"⚠️ {t('please_enter_review')}")

@@ -172,21 +172,21 @@ class UserPracticeTracker:
                 user_id, error_code, error_name, error_name, category
             ))
             
-            logger.debug(f"Started practice session for user {user_id}, error {error_code} ({error_name})")
+            logger.info(f"Started practice session for user {user_id}, error {error_code} ({error_name})")
             
         except Exception as e:
             logger.error(f"Error starting practice session: {str(e)}")
     
     def complete_practice_session(self, user_id: str, error_code: str, 
                             session_data: Dict[str, Any]) -> None:
-        """Record the completion of a practice session with results."""
+        """Record the completion of a practice session with results."""      
         if not user_id or not error_code:
             return
             
         try:
-            accuracy = session_data.get('accuracy', 0.0)
-            time_spent = session_data.get('time_spent_seconds', 0)
-            successful = session_data.get('successful_completion', False)
+            accuracy = session_data.get(t('accuracy'), 0.0)
+            time_spent = session_data.get(t('time_spent_seconds'), 0)
+            successful = session_data.get(t('successful_completion'), False)            
             
             # Determine completion status based on performance
             if accuracy >= 90:
@@ -223,7 +223,7 @@ class UserPracticeTracker:
             if affected_rows == 0:
                 logger.warning(f"No practice session found to update for user {user_id}, error {error_code}")
             else:
-                logger.debug(f"Completed practice session for user {user_id}, error {error_code}, accuracy: {accuracy}%")
+                logger.warning(f"Completed practice session for user {user_id}, error {error_code}, accuracy: {accuracy}%")
             
         except Exception as e:
             logger.error(f"Error completing practice session: {str(e)}")
