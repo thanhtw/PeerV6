@@ -172,7 +172,7 @@ class UserPracticeTracker:
                 user_id, error_code, error_name, error_name, category
             ))
             
-            logger.info(f"Started practice session for user {user_id}, error {error_code} ({error_name})")
+            logger.debug(f"Started practice session for user {user_id}, error {error_code} ({error_name})")
             
         except Exception as e:
             logger.error(f"Error starting practice session: {str(e)}")

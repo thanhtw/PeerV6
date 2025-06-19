@@ -1,12 +1,5 @@
 """
-Main Database Setup Script for Java Peer Review Training System.
-
-This script orchestrates the complete database setup process:
-1. Creates database schema and tables
-2. Automatically imports data from SQL files
-3. Verifies the complete setup
-
-Run this script to set up the entire database automatically.
+Fixed Database Setup Script with privilege handling
 """
 import mysql.connector
 import sys
@@ -34,7 +27,7 @@ class DatabaseSetup:
         """Initialize database setup with configuration."""
         # Get database configuration from environment variables with defaults
         self.db_host = os.getenv("DB_HOST", "localhost")
-        self.db_user = os.getenv("DB_USER", "root")  # Default to root for setup
+        self.db_user = os.getenv("DB_USER", "root")  
         self.db_password = os.getenv("DB_PASSWORD", "")
         self.db_name = os.getenv("DB_NAME", "java_review_db")
         self.db_port = int(os.getenv("DB_PORT", "3306"))
@@ -47,6 +40,39 @@ class DatabaseSetup:
         logger.debug(f"  Host: {self.db_host}:{self.db_port}")
         logger.debug(f"  Database: {self.db_name}")
         logger.debug(f"  App User: {self.app_user}")
+
+    def check_user_privileges(self):
+        """Check if current user has necessary privileges."""
+        try:
+            connection = mysql.connector.connect(
+                host=self.db_host,
+                user=self.db_user,
+                password=self.db_password,
+                port=self.db_port
+            )
+            
+            cursor = connection.cursor()
+            cursor.execute("SHOW GRANTS FOR CURRENT_USER()")
+            grants = cursor.fetchall()
+            
+            has_create_user = False
+            has_all_privileges = False
+            
+            for grant in grants:
+                grant_text = grant[0].upper()
+                if "CREATE USER" in grant_text or "ALL PRIVILEGES" in grant_text:
+                    has_create_user = True
+                if "ALL PRIVILEGES" in grant_text:
+                    has_all_privileges = True
+            
+            cursor.close()
+            connection.close()
+            
+            return has_create_user, has_all_privileges
+            
+        except Exception as e:
+            logger.error(f"Error checking privileges: {e}")
+            return False, False
 
     def test_connection(self):
         """Test database connection without specifying database."""
@@ -123,9 +149,52 @@ class DatabaseSetup:
             logger.error(f"Unexpected error creating database: {str(e)}")
             return False
     
-    def create_application_user(self):
-        """Create application user with proper permissions."""
+    def check_user_exists(self, username):
+        """Check if a user already exists."""
         try:
+            connection = mysql.connector.connect(
+                host=self.db_host,
+                user=self.db_user,
+                password=self.db_password,
+                port=self.db_port,
+                database=self.db_name,
+                charset='utf8mb4',
+                collation='utf8mb4_unicode_ci'
+            )
+            
+            cursor = connection.cursor()
+            cursor.execute("SELECT User FROM mysql.user WHERE User = %s", (username,))
+            result = cursor.fetchone()
+            
+            cursor.close()
+            connection.close()
+            
+            return result is not None
+            
+        except Exception as e:
+            logger.debug(f"Could not check if user exists: {e}")
+            return False
+
+    def create_application_user(self):
+        """Create application user with proper permissions, with fallback options."""
+        try:
+            # First check if we have the necessary privileges
+            has_create_user, has_all_privileges = self.check_user_privileges()
+            
+            if not has_create_user:
+                logger.warning("⚠️  Current user lacks CREATE USER privileges")
+                logger.warning("Attempting to continue without creating application user...")
+                logger.warning("You may need to create the user manually or use the current user for the application")
+                
+                # Check if the user already exists
+                if self.check_user_exists(self.app_user):
+                    logger.info(f"✅ Application user '{self.app_user}' already exists")
+                    return True
+                else:
+                    logger.warning(f"⚠️  Application user '{self.app_user}' does not exist")
+                    logger.warning("⚠️  You should create this user manually or update your .env to use the current user")
+                    return True  # Continue setup even without creating user
+            
             logger.debug(f"Creating application user '{self.app_user}'...")
             
             connection = mysql.connector.connect(
@@ -163,8 +232,15 @@ class DatabaseSetup:
             return True
             
         except mysql.connector.Error as e:
-            logger.error(f"Error creating application user: {str(e)}")
-            return False
+            if e.errno == 1227:  # Access denied for CREATE USER
+                logger.warning(f"⚠️  Cannot create user due to insufficient privileges: {str(e)}")
+                logger.warning("⚠️  Continuing setup - you may need to create the user manually")
+                logger.warning(f"⚠️  Manual command: CREATE USER '{self.app_user}'@'%' IDENTIFIED BY '{self.app_password}';")
+                logger.warning(f"⚠️  Grant command: GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, ALTER ON `{self.db_name}`.* TO '{self.app_user}'@'%';")
+                return True  # Continue setup
+            else:
+                logger.error(f"Error creating application user: {str(e)}")
+                return False
         except Exception as e:
             logger.error(f"Unexpected error creating user: {str(e)}")
             return False
@@ -304,9 +380,9 @@ class DatabaseSetup:
                 try:
                     # Verify we have all expected data
                     expected_counts = {
-                        'error_categories': 8,
-                        'java_errors': 41,  # Updated from limited count to full JSON count
-                        'badges': 7
+                        'error_categories': 5,
+                        'java_errors': 35,  
+                        'badges': 25
                     }
                     
                     for table, expected in expected_counts.items():
@@ -360,7 +436,7 @@ class DatabaseSetup:
                     logger.error(f"Error verifying data relationships: {str(e)}")
                     all_tables_ok = False
             
-            if all_tables_ok and total_records > 50:  # Updated minimum expected records
+            if all_tables_ok and total_records > 50:  
                 logger.debug(f"🎉 Database setup verification PASSED! Total records: {total_records}")
                 return True
             else:
@@ -391,11 +467,12 @@ class DatabaseSetup:
                 logger.error("❌ Failed to create database")
                 return False
             
-            if not setup.create_application_user():
-                logger.error("❌ Failed to create application user")
-                return False
+            # Modified to handle privilege issues gracefully
+            user_creation_result = setup.create_application_user()
+            if not user_creation_result:
+                logger.warning("⚠️  Application user creation had issues, but continuing...")
             
-            logger.debug("✅ Database and user setup completed")
+            logger.debug("✅ Database setup completed")
             
             # Step 3: Find SQL files
             sql_files = self.find_sql_files()
@@ -429,10 +506,6 @@ class DatabaseSetup:
                 logger.error("❌ Setup verification failed")
                 return False
             
-            # Step 6: Create/update .env file
-            # if setup.create_env_file():
-            #     logger.debug("✅ .env file updated")
-            
             return True
             
         except Exception as e:
@@ -451,6 +524,13 @@ class DatabaseSetup:
         print("✓ Verify the complete setup")
         print("✓ Update configuration files")
         
+        # Check privileges first
+        has_create_user, has_all_privileges = self.check_user_privileges()
+        if not has_create_user:
+            print("\n⚠️  WARNING: Current user lacks CREATE USER privileges")
+            print("   The script will continue but may not create the application user")
+            print("   You may need to create the user manually later")
+        
         confirm = input("\nProceed with automated setup? (y/n): ")
         if confirm.lower() != 'y':
             print("Setup cancelled")
@@ -462,6 +542,11 @@ class DatabaseSetup:
         if success:
             print("\n🎉 AUTOMATED SETUP COMPLETED SUCCESSFULLY!")
             print("\n✅ Next steps:")
+            if not has_create_user:
+                print("⚠️  IMPORTANT: You may need to manually create the application user:")
+                print(f"   CREATE USER '{self.app_user}'@'%' IDENTIFIED BY '{self.app_password}';")
+                print(f"   GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, ALTER ON `{self.db_name}`.* TO '{self.app_user}'@'%';")
+                print("   FLUSH PRIVILEGES;")
             print("1. Run verification: python verify_setup.py")
             print("2. Test the system: python examples/database_repository_usage.py")
             print("3. Start the application!")

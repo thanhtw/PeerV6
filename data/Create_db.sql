@@ -6,9 +6,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP VIEW IF EXISTS user_performance_summary;
 DROP VIEW IF EXISTS daily_activity_summary;
 DROP VIEW IF EXISTS badge_progress_summary; 
-
 DROP VIEW IF EXISTS user_practice_summary; 
-
 DROP TABLE IF EXISTS user_badges;
 DROP TABLE IF EXISTS activity_log;
 DROP TABLE IF EXISTS java_errors;
@@ -21,6 +19,7 @@ DROP TABLE IF EXISTS error_category_stats;
 DROP TABLE IF EXISTS review_sessions;
 DROP TABLE IF EXISTS badge_progress;
 DROP TABLE IF EXISTS user_streaks;  
+DROP TABLE IF EXISTS user_error_practice;
 SET FOREIGN_KEY_CHECKS = 1;
 
 
