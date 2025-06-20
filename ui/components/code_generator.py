@@ -82,7 +82,7 @@ class CodeGeneratorUI:
             return
         
         # Professional header section
-        self._render_header()
+        #self._render_header()
     
         # Initialize session state properly
         self._initialize_session_state()
@@ -129,18 +129,18 @@ class CodeGeneratorUI:
 
     def _render_configuration_section(self, user_level: str):
         """Render the configuration section with category selection only."""
-        st.markdown('<div class="generate-section">', unsafe_allow_html=True)
+        # st.markdown('<div class="generate-section">', unsafe_allow_html=True)
         
         # Section header
-        st.markdown(f"""
-        <div class="section-header">
-            <span class="section-icon">⚙️</span>
-            <div>
-                <h3 class="section-title">{t('configuration')}</h3>
-                <p class="section-subtitle">{t('setup_code_generation_parameters')}</p>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # st.markdown(f"""
+        # <div class="section-header">
+        #     <span class="section-icon">⚙️</span>
+        #     <div>
+        #         <h3 class="section-title">{t('configuration')}</h3>
+        #         <p class="section-subtitle">{t('setup_code_generation_parameters')}</p>
+        #     </div>
+        # </div>
+        # """, unsafe_allow_html=True)
         
         # Parameters display
         self._render_parameters_display(user_level)
@@ -148,7 +148,7 @@ class CodeGeneratorUI:
         # Category selection interface (no tabs needed)
         self._render_category_selection_interface()
         
-        st.markdown('</div>', unsafe_allow_html=True)
+        # st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_category_selection_interface(self):
         """Render the category selection interface without mode tabs."""
@@ -172,7 +172,7 @@ class CodeGeneratorUI:
                 unsafe_allow_html=True
             )
         
-        st.markdown('<div class="generate-button-section">', unsafe_allow_html=True)
+        # st.markdown('<div class="generate-button-section">', unsafe_allow_html=True)
         
         
         if st.button(
@@ -185,7 +185,7 @@ class CodeGeneratorUI:
             if self._can_generate():                
                 self._handle_code_generation_with_tracking()
         
-        st.markdown('</div>', unsafe_allow_html=True)
+        # st.markdown('</div>', unsafe_allow_html=True)
         
         if not selected_categories:
             st.warning(f"⚠️ {t('please_select_at_least_one_error_category')}")

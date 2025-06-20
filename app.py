@@ -90,7 +90,7 @@ def main():
     
     # Clean up expired locks at start of each run
     session_state_manager.cleanup_expired_locks()
-    code_display_ui = CodeDisplayUI()
+    
     # Handle workflow progression flags
     if _handle_workflow_progression():
         return
@@ -174,7 +174,7 @@ def main():
     # Initialize workflow after provider is setup
     workflow = JavaCodeReviewGraph(llm_manager)
 
-    # Initialize UI components with enhanced state management
+    # Initialize UI components with enhanced state management - FIXED: Initialize code_display_ui first
     code_display_ui = CodeDisplayUI()
     code_generator_ui = CodeGeneratorUI(workflow, code_display_ui)       
     error_explorer_ui = TutorialUI(workflow)
@@ -303,7 +303,7 @@ def render_unified_practice_workflow(code_generator_ui, workflow, code_display_u
     <style>
     .practice-phase {
         margin-bottom: 3rem;
-        padding: 2rem;
+        padding: 1rem;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         border: 1px solid #e9ecef;
@@ -348,7 +348,7 @@ def render_unified_practice_workflow(code_generator_ui, workflow, code_display_u
     """, unsafe_allow_html=True)
 
     # Phase 1: Code Generation
-    render_generation_phase(code_generator_ui, workflow_info, current_phase, user_level)
+    render_generation_phase(code_generator_ui, workflow_info, current_phase, user_level, code_generator_ui)
     
     # Phase 2: Code Review  
     render_review_phase(workflow, code_display_ui, workflow_info, current_phase)
@@ -356,7 +356,7 @@ def render_unified_practice_workflow(code_generator_ui, workflow, code_display_u
     # Phase 3: Feedback
     render_feedback_phase(workflow, auth_ui, workflow_info, current_phase)
 
-def render_generation_phase(code_generator_ui, workflow_info, current_phase, user_level):
+def render_generation_phase(code_generator_ui, workflow_info, current_phase, user_level, code_display_ui):
     """Render the code generation phase."""
     
     # Determine phase status
@@ -405,21 +405,6 @@ def render_generation_phase(code_generator_ui, workflow_info, current_phase, use
             st.session_state.workflow_phase = "review"
             scroll_to_top()
             st.rerun()
-    
-    elif workflow_info["has_code"]:
-        # Show completed generation summary
-        st.success("✅ " + t("code_generated_successfully"))
-        
-        # Show generated code in collapsed form
-        with st.expander("📄 " + t("view_generated_code"), expanded=False):
-            if hasattr(st.session_state.workflow_state, 'code_snippet'):
-                code_display_ui.render_code_display(st.session_state.workflow_state.code_snippet)
-        
-        # Option to regenerate
-        if st.button("🔄 " + t("generate_new_code"), key="regenerate_from_summary"):
-            st.session_state.workflow_phase = "generate"
-            scroll_to_top()
-            st.rerun()
 
 def render_review_phase(workflow, code_display_ui, workflow_info, current_phase):
     """Render the code review phase."""
@@ -456,10 +441,7 @@ def render_review_phase(workflow, code_display_ui, workflow_info, current_phase)
         # Show completed review summary
         st.success("🎉 " + t("review_completed_successfully"))
         
-        # Show review history in collapsed form
-        with st.expander("📊 " + t("view_review_history"), expanded=False):
-            render_review_summary(workflow_info)
-        
+      
         # Option to restart review
         if st.button("🔄 " + t("restart_review"), key="restart_review_from_summary"):
             # Reset review state
@@ -515,29 +497,6 @@ def render_feedback_phase(workflow, auth_ui, workflow_info, current_phase):
     
     # Show feedback interface
     render_feedback_tab(workflow, auth_ui)
-
-def render_review_summary(workflow_info):
-    """Render a summary of completed review."""
-    state = st.session_state.workflow_state
-    review_history = getattr(state, 'review_history', [])
-    
-    if review_history:
-        st.markdown(f"**{t('review_attempts')}:** {len(review_history)}")
-        
-        latest_review = review_history[-1]
-        if hasattr(latest_review, 'analysis') and latest_review.analysis:
-            analysis = latest_review.analysis
-            identified = analysis.get(t('identified_count'), 0)
-            total = analysis.get(t('total_problems'), 1)
-            accuracy = analysis.get(t('identified_percentage'), 0)
-            
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(t("issues_found"), f"{identified}/{total}")
-            with col2:
-                st.metric(t("accuracy"), f"{accuracy:.1f}%")
-            with col3:
-                st.metric(t("attempts"), len(review_history))
 
 def render_improved_review_tab(workflow, code_display_ui, workflow_info):
     """Render the improved review tab with better state handling."""

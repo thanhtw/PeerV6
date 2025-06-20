@@ -2137,7 +2137,7 @@ html[data-theme="dark"] .stMetric {
 .professional-code-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 1.5rem 2rem;
+    padding: 0.5rem 1rem;
     border-radius: 12px 12px 0 0;
     margin-bottom: 0;
     border-bottom: 3px solid rgba(255,255,255,0.2);
@@ -2196,7 +2196,7 @@ html[data-theme="dark"] .stMetric {
 .enhanced-review-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 2rem;
+    padding: 1rem;
     border-radius: 12px 12px 0 0;
     position: relative;
     overflow: hidden;
