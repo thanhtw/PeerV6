@@ -969,9 +969,27 @@
 
     "review_feedback_and_start_new_cycle": "審查反饋並開始新週期",
     "start_by_generating_code": "從生成程式碼開始",
-
     "time_spent_seconds": "時間花費（秒）",
-    "successful_completion": "成功完成"
+    "successful_completion": "成功完成",
 
+    "tab_practice": "練習",
+    "phase_1_generate_code": "Phase 1: 生成程式碼",
+    "phase_2_review_code": "Phase 2: 審查程式碼",
+    "phase_3_feedback": "Phase 3: 反饋",
+    "active":"積極的",
+    "pending":"待辦的",
+    "locked":"鎖定",
+    "Complete code generation first to unlock this phase.": "請先完成程式碼生成以解鎖此階段。",
+    "view_generated_code": "查看生成的程式碼",
+    "view_review_history": "查看審查歷史", 
+    "restart_review": "重新開始審查",
+    "current_phase": "當前階段",
+    "overall_progress": "整體進度",
+    "review_feedback_and_results":"審查反饋與結果",
+    "review_attempts": "審查嘗試",
+    "code_generated_successfully_switching_to_review_tab": "程式碼生成成功！正在切換到審查標籤...",
+    "scroll_down_to_continue": "向下滾動以繼續",
+    "phase_completed_continue_below": "階段已完成，請繼續以下步驟",
+    "follow_workflow_sequentially":"請按照工作流程順序進行操作"
   }
 }

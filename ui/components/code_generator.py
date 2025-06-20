@@ -669,8 +669,8 @@ class CodeGeneratorUI:
                     st.success(f"✅ {t('code_generated_successfully_switching_to_review_tab...')}")
 
                 # FIXED: Use session state manager for safe transition
-                from utils.session_state_manager import session_state_manager
-                session_state_manager.handle_tab_transition_after_generation()
+                # from utils.session_state_manager import session_state_manager
+                # session_state_manager.handle_tab_transition_after_generation()
                 
                 # Small delay then rerun
                 time.sleep(0.3)

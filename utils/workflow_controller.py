@@ -1,4 +1,4 @@
-# utils/workflow_controller.py - FIXED: Review UI not showing issue
+# utils/workflow_controller.py - UPDATED: Simplified for unified practice tab
 
 import streamlit as st
 import logging
@@ -10,29 +10,24 @@ logger = logging.getLogger(__name__)
 
 class WorkflowController:
     """
-    FIXED: Controls workflow progression and tab accessibility.
-    Fixed issue where review UI wasn't showing in analyze_code_and_identify_errors step.
+    UPDATED: Simplified workflow controller for unified practice tab.
+    Manages workflow phases instead of separate tabs.
     """
     
     def __init__(self):
-        self.workflow_steps = [
-            "tutorial",      # 0 - Always accessible
-            "generate",      # 1 - Code generation
-            "review",        # 2 - Code review
-            "feedback"       # 3 - Results and feedback
+        self.workflow_phases = [
+            "generate",      # Code generation phase
+            "review",        # Code review phase
+            "feedback"       # Results and feedback phase
         ]
-    
     
     def get_workflow_state_info(self) -> Dict:
         """
-        FIXED: Get comprehensive workflow state information with improved code detection.
+        Get comprehensive workflow state information for unified practice flow.
         """
         # Default state for new users
         default_state = {
-            "current_phase": "initial",
-            "accessible_tabs": [0, 1],  # Tutorial, Generate
-            "blocked_tabs": [2, 3],     # Review, Feedback blocked
-            "current_step": "generate",
+            "current_phase": "generate",
             "progress_percentage": 0,
             "can_generate": True,
             "in_review": False,
@@ -41,7 +36,12 @@ class WorkflowController:
             "review_count": 0,
             "current_iteration": 1,
             "max_iterations": 3,
-            "review_sufficient": False
+            "review_sufficient": False,
+            "phase_status": {
+                "generate": "pending",
+                "review": "locked",
+                "feedback": "locked"
+            }
         }
         
         # Check if we have workflow state
@@ -51,68 +51,70 @@ class WorkflowController:
         
         state = st.session_state.workflow_state
         
-        # FIXED: Improved code detection with multiple validation methods
+        # Detect code presence
         has_code = self._detect_code_presence(state)
         logger.debug(f"Code detection result: {has_code}")
         
-        # FIXED: Enhanced review detection
+        # Enhanced review detection
         has_reviews = hasattr(state, 'review_history') and len(getattr(state, 'review_history', [])) > 0
         review_sufficient = getattr(state, 'review_sufficient', False)
         current_iteration = getattr(state, 'current_iteration', 1)
         max_iterations = getattr(state, 'max_iterations', 3)
         
-        # FIXED: Check if we just completed generation (special state)
+        # Check if we just completed generation
         generation_completed = st.session_state.get("generation_completed", False)
         
         logger.debug(f"Review state: has_reviews={has_reviews}, sufficient={review_sufficient}, iter={current_iteration}/{max_iterations}, gen_completed={generation_completed}")
         
-        # FIXED: Improved phase determination
-        if not has_code and not generation_completed:
-            # Phase 1: Need to generate code
-            current_phase = "generate"
-            accessible_tabs = [0, 1]  # Tutorial, Generate
-            blocked_tabs = [2, 3]     # Review, Feedback blocked
-            can_generate = True
-            in_review = False
-            review_complete = False
-            progress_percentage = 0
-            
-        elif (has_code or generation_completed) and (not review_sufficient and current_iteration <= max_iterations):
-            # Phase 2: Code exists or just generated, in review process
-            current_phase = "review"
-            accessible_tabs = [0, 2]  # Tutorial, Review - Allow review when code exists
-            blocked_tabs = [1, 3]     # Generate, Feedback blocked during review
-            can_generate = False
-            in_review = True
-            review_complete = False
-            progress_percentage = 25 + (current_iteration - 1) * 20
-            
-        elif review_sufficient or current_iteration > max_iterations:
-            # Phase 3: Review complete
-            current_phase = "complete"
-            accessible_tabs = [0, 1, 3]  # Tutorial, Generate (new cycle), Feedback
-            blocked_tabs = [2]           # Review blocked unless new cycle
-            can_generate = True
-            in_review = False
-            review_complete = True
-            progress_percentage = 100
-            
+        # Determine workflow phases and progress
+        phase_status = {}
+        
+        # Phase 1: Generate
+        if has_code or generation_completed:
+            phase_status["generate"] = "completed"
+            can_generate = True  # Can regenerate
+            progress = 33
         else:
-            # Fallback: allow generation
-            current_phase = "generate"
-            accessible_tabs = [0, 1]
-            blocked_tabs = [2, 3]
+            phase_status["generate"] = "active"
             can_generate = True
+            progress = 10
+        
+        # Phase 2: Review
+        if not has_code and not generation_completed:
+            phase_status["review"] = "locked"
             in_review = False
+        elif review_sufficient or current_iteration > max_iterations:
+            phase_status["review"] = "completed"
+            in_review = False
+            progress = 66
+        else:
+            phase_status["review"] = "active"
+            in_review = True
+            progress = 33 + (current_iteration - 1) * 10
+        
+        # Phase 3: Feedback
+        if review_sufficient or current_iteration > max_iterations:
+            phase_status["feedback"] = "active"
+            review_complete = True
+            progress = 100
+        else:
+            phase_status["feedback"] = "locked"
             review_complete = False
-            progress_percentage = 0
+        
+        # Determine current phase based on workflow state and user selection
+        current_workflow_phase = st.session_state.get('workflow_phase', 'generate')
+        
+        # Auto-advance phase based on completion
+        if current_workflow_phase == "generate" and has_code:
+            current_workflow_phase = "review"
+            st.session_state.workflow_phase = "review"
+        elif current_workflow_phase == "review" and review_complete:
+            current_workflow_phase = "feedback"
+            st.session_state.workflow_phase = "feedback"
         
         result = {
-            "current_phase": current_phase,
-            "accessible_tabs": accessible_tabs,
-            "blocked_tabs": blocked_tabs,
-            "current_step": current_phase,
-            "progress_percentage": progress_percentage,
+            "current_phase": current_workflow_phase,
+            "progress_percentage": progress,
             "can_generate": can_generate,
             "in_review": in_review,
             "review_complete": review_complete,
@@ -120,7 +122,8 @@ class WorkflowController:
             "review_count": len(getattr(state, 'review_history', [])),
             "current_iteration": current_iteration,
             "max_iterations": max_iterations,
-            "review_sufficient": review_sufficient
+            "review_sufficient": review_sufficient,
+            "phase_status": phase_status
         }
         
         logger.debug(f"Workflow state info: {result}")
@@ -128,7 +131,7 @@ class WorkflowController:
     
     def _detect_code_presence(self, state) -> bool:
         """
-        FIXED: More robust code presence detection with better validation.
+        Robust code presence detection with better validation.
         """
         try:
             # Method 1: Check generation_completed flag (most immediate)
@@ -182,93 +185,69 @@ class WorkflowController:
             logger.error(f"Error detecting code presence: {str(e)}")
             return False
     
-    def validate_tab_access(self, tab_index: int) -> Tuple[bool, str]:
+    def validate_phase_access(self, phase: str) -> Tuple[bool, str]:
         """
-        FIXED: Validate tab access with improved logic for code-ready state.
+        Validate access to a specific workflow phase.
         """
         workflow_info = self.get_workflow_state_info()
+        phase_status = workflow_info["phase_status"]
         
-        # Tutorial tab (0) is always accessible
-        if tab_index == 0:
-            return True, ""
+        if phase not in phase_status:
+            return False, f"Unknown phase: {phase}"
         
-        # Generate tab (1)
-        if tab_index == 1:
-            if workflow_info["in_review"] and not workflow_info["review_complete"]:
-                return False, t("complete_current_review_first")
-            else:
-                return True, ""  # Allow generate when not in active review
-                
-        # Review tab (2) - FIXED: More permissive access
-        elif tab_index == 2:
-            if not workflow_info["has_code"] and not st.session_state.get("generation_completed", False):
+        status = phase_status[phase]
+        
+        if status == "locked":
+            if phase == "review":
                 return False, t("generate_code_first")
-            elif workflow_info["review_complete"]:
-                return False, t("review_already_complete")
-            else:
-                return True, ""  # Allow review when code exists or just generated
-                
-        # Feedback tab (3)
-        elif tab_index == 3:
-            if not workflow_info["review_complete"]:
+            elif phase == "feedback":
                 return False, t("complete_review_first")
-            else:
-                return True, ""
         
         return True, ""
     
-    def get_tab_state(self, tab_index: int) -> Dict:
-        """Get the state information for a specific tab."""
-        can_access, reason = self.validate_tab_access(tab_index)
+    def get_phase_progress(self) -> Dict:
+        """Get progress information for all phases."""
         workflow_info = self.get_workflow_state_info()
         
         return {
-            "can_access": can_access,
-            "blocked_reason": reason,
-            "is_current_step": workflow_info["current_step"] == self.workflow_steps[tab_index],
-            "is_completed": self._is_tab_completed(tab_index, workflow_info)
+            "overall_progress": workflow_info["progress_percentage"],
+            "current_phase": workflow_info["current_phase"],
+            "phase_status": workflow_info["phase_status"],
+            "can_advance": self._can_advance_phase(workflow_info)
         }
     
-    def _is_tab_completed(self, tab_index: int, workflow_info: Dict) -> bool:
-        """Check if a tab step is completed."""
-        if tab_index == 1:  # Generate tab
+    def _can_advance_phase(self, workflow_info: Dict) -> bool:
+        """Check if the workflow can advance to the next phase."""
+        current_phase = workflow_info["current_phase"]
+        
+        if current_phase == "generate":
             return workflow_info["has_code"]
-        elif tab_index == 2:  # Review tab
+        elif current_phase == "review":
             return workflow_info["review_complete"]
-        elif tab_index == 3:  # Feedback tab
-            return False  # Feedback is final step
+        elif current_phase == "feedback":
+            return False  # Feedback is the final phase
+        
         return False
     
-    def handle_invalid_tab_access(self, attempted_tab: int, current_tab: int) -> int:
+    def advance_to_next_phase(self) -> bool:
         """
-        FIXED: Handle invalid tab access with better logic.
+        Advance workflow to the next logical phase.
+        Returns True if advanced, False if cannot advance.
         """
         workflow_info = self.get_workflow_state_info()
+        current_phase = workflow_info["current_phase"]
         
-        # FIXED: More permissive redirects
-        if attempted_tab == 2 and workflow_info["has_code"]:
-            # Allow review tab if code exists
-            return 2
-        elif attempted_tab == 1:
-            # Allow generate tab unless in active review
-            if not workflow_info["in_review"]:
-                return 1
-            else:
-                st.warning(t("complete_current_review_first"))
-                return 2  # Redirect to review
-        elif attempted_tab == 3 and workflow_info["review_complete"]:
-            # Allow feedback if review complete
-            return 3
+        if not self._can_advance_phase(workflow_info):
+            return False
         
-        # Redirect based on current phase
-        if workflow_info["current_phase"] == "generate":
-            return 1
-        elif workflow_info["current_phase"] == "review":
-            return 2
-        elif workflow_info["current_phase"] == "complete":
-            return 3
-        else:
-            return 0  # Tutorial
+        if current_phase == "generate" and workflow_info["has_code"]:
+            st.session_state.workflow_phase = "review"
+            return True
+        elif current_phase == "review" and workflow_info["review_complete"]:
+            st.session_state.workflow_phase = "feedback"
+            return True
+        
+        return False
     
     def reset_workflow_for_new_cycle(self):
         """Reset workflow state to start a new code generation cycle."""
@@ -284,179 +263,178 @@ class WorkflowController:
             state.error = None
             state.current_step = "generate"
             
-            # FIXED: Also clear generation flags
+            # Clear generation flags
             if "generation_completed" in st.session_state:
                 del st.session_state["generation_completed"]
             
+            # Reset to generate phase
+            st.session_state.workflow_phase = "generate"
+            
             logger.info("Workflow reset for new generation cycle")
     
-    def ensure_correct_tab_after_generation(self):
-        """
-        FIXED: Ensure the correct tab is active after code generation.
-        """
-        workflow_info = self.get_workflow_state_info()
-        
-        # If we just completed generation and we're not on review tab, switch to it
-        if (workflow_info["has_code"] or st.session_state.get("generation_completed", False)) and not workflow_info["in_review"]:
-            if st.session_state.get("active_tab", 0) != 2:
-                logger.debug("Switching to review tab after code generation")
-                st.session_state.active_tab = 2
-                return True
-        
-        return False
-
     def render_workflow_progress_indicator(self):
-        """FIXED: Render workflow progress with debug info."""
+        """Render simplified workflow progress for unified practice tab."""
         workflow_info = self.get_workflow_state_info()
         
-        # Add debug info in development
-        if st.session_state.get("show_debug_workflow", False):
-            with st.expander("🔧 Workflow Debug Info", expanded=False):
-                st.json(workflow_info)
-                if st.button("Hide Debug"):
-                    st.session_state.show_debug_workflow = False
-                    st.rerun()
-        
-        # Create progress steps
+        # Create progress steps for unified view
         steps = [
-            {"name": t("generate_code"), "icon": "🔧", "step": "generate"},
-            {"name": t("review_code"), "icon": "📋", "step": "review"}, 
-            {"name": t("view_feedback"), "icon": "📊", "step": "complete"}
+            {"name": t("generate_code"), "icon": "🔧", "phase": "generate"},
+            {"name": t("review_code"), "icon": "📋", "phase": "review"}, 
+            {"name": t("view_feedback"), "icon": "📊", "phase": "feedback"}
         ]
         
-        # Determine step states
         current_phase = workflow_info["current_phase"]
+        phase_status = workflow_info["phase_status"]
         
         st.markdown("""
         <style>
-        .workflow-progress {
+        .unified-workflow-progress {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 1rem 0;
-            padding: 1rem;
-            background: linear-gradient(90deg, #f8f9fa, #e9ecef);
-            border-radius: 8px;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
             border: 1px solid #dee2e6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        .progress-step {
+        .unified-progress-step {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0 1rem;
-            padding: 0.5rem;
-            border-radius: 8px;
-            min-width: 80px;
+            margin: 0 2rem;
+            padding: 1rem;
+            border-radius: 12px;
+            min-width: 120px;
             transition: all 0.3s ease;
+            position: relative;
         }
-        .progress-step.active {
-            background: #6f61c1;
-            color: white !important;
-            box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+        .unified-progress-step.completed {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            color: #155724;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
         }
-        .progress-step.completed {
-            background: #28a745;
-            color: white;
+        .unified-progress-step.active {
+            background: linear-gradient(135deg, #fff3cd 0%, #fef8e1 100%);
+            border: 2px solid #ffc107;
+            color: #856404;
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+            transform: scale(1.05);
         }
-        .progress-step.disabled {
-            background: rgb(215 215 214 / 46%);
-            color: #adb5bd;
+        .unified-progress-step.locked {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid #6c757d;
+            color: #6c757d;
+            opacity: 0.6;
         }
-        .step-icon {
-            font-size: 1.5rem;
+        .unified-step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .unified-step-name {
+            font-size: 1rem;
+            text-align: center;
+            font-weight: 600;
             margin-bottom: 0.25rem;
         }
-        .step-name {
+        .unified-step-status {
             font-size: 0.8rem;
-            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             font-weight: 500;
         }
-        .step-connector {
-            flex: 1;
-            height: 2px;
+        .unified-step-connector {
+            position: absolute;
+            top: 50%;
+            right: -2rem;
+            width: 4rem;
+            height: 3px;
             background: #dee2e6;
-            margin: 0 0.5rem;
-            align-self: center;
+            transform: translateY(-50%);
         }
-        .step-connector.completed {
-            background: #28a745;
+        .unified-step-connector.completed {
+            background: linear-gradient(90deg, #28a745, #20c997);
+        }
+        .unified-step-connector.active {
+            background: linear-gradient(90deg, #ffc107, #fd7e14);
         }
         </style>
         """, unsafe_allow_html=True)
         
         # Build progress HTML
-        progress_html = '<div class="workflow-progress">'
+        progress_html = '<div class="unified-workflow-progress">'
         
         for i, step in enumerate(steps):
-            # Determine step state
-            if step["step"] == "generate":
-                if workflow_info["has_code"]:
-                    step_class = "completed"
-                elif current_phase == "generate" or current_phase == "initial":
-                    step_class = "active"
-                else:
-                    step_class = "disabled"
-            elif step["step"] == "review":
-                if workflow_info["review_complete"]:
-                    step_class = "completed"
-                elif current_phase == "review" or (workflow_info["has_code"] and not workflow_info["review_complete"]):
-                    step_class = "active"
-                else:
-                    step_class = "disabled"
-            elif step["step"] == "complete":
-                if workflow_info["review_complete"]:
-                    step_class = "active"
-                else:
-                    step_class = "disabled"
+            phase = step["phase"]
+            status = phase_status.get(phase, "locked")
+            
+            # Determine CSS class
+            if status == "completed":
+                step_class = "completed"
+            elif status == "active" or phase == current_phase:
+                step_class = "active"
             else:
-                step_class = "disabled"
+                step_class = "locked"
             
             progress_html += f'''
-            <div class="progress-step {step_class} progress-step-heigh">
-                <div class="step-icon">{step["icon"]}</div>
-                <div class="step-name">{step["name"]}</div>
-            </div>
+            <div class="unified-progress-step {step_class}">
+                <div class="unified-step-icon">{step["icon"]}</div>
+                <div class="unified-step-name">{step["name"]}</div>
+                <div class="unified-step-status">{t(status)}</div>
             '''
             
             # Add connector except for last step
             if i < len(steps) - 1:
-                connector_class = "completed" if step_class == "completed" else ""
-                progress_html += f'<div class="step-connector {connector_class}"></div>'
+                connector_class = "completed" if status == "completed" else ("active" if status == "active" else "")
+                progress_html += f'<div class="unified-step-connector {connector_class}"></div>'
+            
+            progress_html += '</div>'
         
         progress_html += '</div>'
         
         st.markdown(progress_html, unsafe_allow_html=True)
         
-        # Add phase description
+        # Add current phase description
         phase_descriptions = {
-            "initial": t("start_by_generating_code"),
             "generate": t("configure_and_generate_java_code"),
             "review": t("analyze_code_and_identify_errors"),
-            "complete": t("review_feedback_and_start_new_cycle")
+            "feedback": t("review_feedback_and_results")
         }
         
         description = phase_descriptions.get(current_phase, "")
         if description:
-            st.info(f"📍 {description}")
+            st.info(f"📍 **{t('current_phase')}:** {description}")
+        
+        # Show overall progress
+        overall_progress = workflow_info["progress_percentage"]
+        st.progress(overall_progress / 100, text=f"{t('overall_progress')}: {overall_progress}%")
 
-    def force_tab_consistency_check(self):
+    def force_phase_consistency_check(self):
         """
-        Force a consistency check and correction of tab state.
-        Call this when you suspect tab state might be incorrect.
+        Force a consistency check and correction of workflow phase.
         """
         try:
-            from utils.session_state_manager import session_state_manager
-            session_state_manager.ensure_tab_consistency()
-            
-            # Also trigger workflow state info refresh
             workflow_info = self.get_workflow_state_info()
-            logger.debug(f"Forced consistency check - workflow info: {workflow_info}")
+            current_phase = st.session_state.get('workflow_phase', 'generate')
+            
+            # Auto-correct phase based on workflow state
+            if workflow_info["has_code"] and not workflow_info["review_complete"] and current_phase == "generate":
+                st.session_state.workflow_phase = "review"
+                logger.debug("Auto-corrected to review phase - code available")
+            elif workflow_info["review_complete"] and current_phase in ["generate", "review"]:
+                st.session_state.workflow_phase = "feedback"
+                logger.debug("Auto-corrected to feedback phase - review complete")
+            elif not workflow_info["has_code"] and current_phase in ["review", "feedback"]:
+                st.session_state.workflow_phase = "generate"
+                logger.debug("Auto-corrected to generate phase - no code available")
             
             return workflow_info
             
         except Exception as e:
             logger.error(f"Error in force consistency check: {str(e)}")
             return None
-        
+
 # Global instance
 workflow_controller = WorkflowController()

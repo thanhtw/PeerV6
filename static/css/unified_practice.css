@@ -1,0 +1,513 @@
+/* Additional CSS for Unified Practice Tab - Add to static/css/unified_practice.css */
+
+/* Smooth scrolling and page positioning */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    scroll-behavior: smooth;
+}
+
+/* Unified Practice Tab Styles */
+.unified-practice-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Phase Container Styles */
+.practice-phase {
+    margin-bottom: 3rem;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    scroll-margin-top: 2rem; /* For smooth scrolling anchor */
+}
+
+.practice-phase:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.phase-completed {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.2);
+}
+
+.phase-active {
+    background: linear-gradient(135deg, #fff3cd 0%, #fef8e1 100%);
+    border-color: #ffc107;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
+    animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+.phase-upcoming {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-color: #6c757d;
+    opacity: 0.8;
+}
+
+/* Phase Header Styles */
+.phase-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.phase-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.phase-icon {
+    font-size: 2.5rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.phase-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.phase-status {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.status-completed { 
+    background: #28a745; 
+    color: white; 
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.status-active { 
+    background: #ffc107; 
+    color: #212529; 
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.status-pending { 
+    background: #6c757d; 
+    color: white; 
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Phase Content Styles */
+.phase-content {
+    margin-top: 2rem;
+}
+
+.phase-summary {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid currentColor;
+}
+
+.phase-summary h4 {
+    margin: 0 0 1rem 0;
+    color: inherit;
+    font-weight: 600;
+}
+
+.phase-summary .summary-metrics {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.summary-metric {
+    text-align: center;
+    min-width: 80px;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: inherit;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
+/* Navigation Buttons */
+.phase-navigation {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.phase-nav-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.phase-nav-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.phase-nav-button.primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.phase-nav-button.secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+/* Scroll to Top Button */
+.scroll-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.scroll-to-top:hover {
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6);
+}
+
+/* Unified Tab Styles */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 1rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    justify-content: center;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 60px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 74, 188, 0.05) 100%);
+    border-radius: 12px;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    color: #495057;
+    text-transform: none;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    min-width: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 74, 188, 0.1) 100%);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    transform: translateY(-4px);
+    border-color: #667eea;
+}
+
+.stTabs [data-baseweb="tab-panel"] {
+    background-color: transparent;
+    padding: 2rem 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: auto;
+}
+
+/* Animations */
+@keyframes subtle-pulse {
+    0%, 100% {
+        box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
+    }
+    50% {
+        box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.practice-phase {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Progress Indicator for Unified Flow */
+.unified-progress-container {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.unified-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.unified-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #ffc107 50%, #667eea 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.unified-progress-text {
+    text-align: center;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+/* Enhanced Code Display for Unified View */
+.unified-code-container {
+    margin: 2rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.unified-code-header {
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.unified-code-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.unified-code-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.unified-code-button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.unified-code-button.primary {
+    background: #667eea;
+    color: white;
+}
+
+.unified-code-button.secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.unified-code-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .practice-phase {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+    }
+    
+    .phase-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .phase-header-left {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .phase-title {
+        font-size: 1.4rem;
+    }
+    
+    .phase-icon {
+        font-size: 2rem;
+    }
+    
+    .summary-metrics {
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .phase-navigation {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .scroll-to-top {
+        bottom: 1rem;
+        right: 1rem;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .unified-practice-container {
+        padding: 0 0.5rem;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        min-width: 120px;
+        padding: 0.8rem 1rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .practice-phase {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .phase-title {
+        font-size: 1.2rem;
+    }
+    
+    .unified-code-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .unified-code-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .practice-phase {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .phase-completed {
+        background: linear-gradient(135deg, #2d5a3d 0%, #3d6a4d 100%);
+    }
+    
+    .phase-active {
+        background: linear-gradient(135deg, #5a4d2d 0%, #6a5d3d 100%);
+    }
+    
+    .phase-upcoming {
+        background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    }
+    
+    .phase-summary {
+        background: rgba(45, 55, 72, 0.7);
+    }
+    
+    .unified-progress-container {
+        background: rgba(45, 55, 72, 0.95);
+        border-color: #4a5568;
+    }
+}
+
+/* Focus styles for accessibility */
+.phase-nav-button:focus,
+.unified-code-button:focus,
+.scroll-to-top:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .scroll-to-top,
+    .phase-navigation,
+    .unified-progress-container {
+        display: none !important;
+    }
+    
+    .practice-phase {
+        break-inside: avoid;
+        margin-bottom: 2rem;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

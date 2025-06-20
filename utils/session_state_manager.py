@@ -1,4 +1,4 @@
-# utils/session_state_manager.py - NEW: Enhanced session state management
+# utils/session_state_manager.py - UPDATED: Enhanced for unified practice tab
 
 import streamlit as st
 import logging
@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 class SessionStateManager:
     """
-    Enhanced session state manager to prevent conflicts during Streamlit reruns.
-    Handles workflow state consistency and prevents data loss.
+    Enhanced session state manager for unified practice workflow.
+    Handles workflow phase consistency and prevents data loss during transitions.
     """
     
     def __init__(self):
@@ -220,18 +220,19 @@ class SessionStateManager:
                 return True
         
         # Check if we're in review phase
-        workflow_state = st.session_state.get('workflow_state')
-        if workflow_state:
-            current_step = getattr(workflow_state, 'current_step', '')
-            if current_step == 'review':
-                logger.debug("Preventing code regeneration - already in review phase")
+        workflow_phase = st.session_state.get('workflow_phase', 'generate')
+        if workflow_phase == 'review':
+            workflow_state = st.session_state.get('workflow_state')
+            if workflow_state and hasattr(workflow_state, 'code_snippet') and workflow_state.code_snippet:
+                logger.debug("Preventing code regeneration - already in review phase with code")
                 return True
             
             # Check if we have review history
-            review_history = getattr(workflow_state, 'review_history', [])
-            if review_history:
-                logger.debug("Preventing code regeneration - review history exists")
-                return True
+            if workflow_state and hasattr(workflow_state, 'review_history'):
+                review_history = getattr(workflow_state, 'review_history', [])
+                if review_history:
+                    logger.debug("Preventing code regeneration - review history exists")
+                    return True
         
         return False
     
@@ -275,6 +276,135 @@ class SessionStateManager:
             # Return a new state as fallback
             return WorkflowState()
     
+    def handle_phase_transition(self, from_phase: str, to_phase: str) -> bool:
+        """
+        Handle transition between workflow phases in unified practice tab.
+        
+        Args:
+            from_phase: Current phase
+            to_phase: Target phase
+            
+        Returns:
+            True if transition was handled, False otherwise
+        """
+        try:
+            logger.debug(f"Handling phase transition: {from_phase} -> {to_phase}")
+            
+            # Validate transition
+            if not self._validate_phase_transition(from_phase, to_phase):
+                logger.warning(f"Invalid phase transition: {from_phase} -> {to_phase}")
+                return False
+            
+            # Update workflow phase
+            st.session_state.workflow_phase = to_phase
+            
+            # Mark transition timestamp
+            transition_key = f"phase_transition_{to_phase}"
+            st.session_state[transition_key] = {
+                'timestamp': time.time(),
+                'from_phase': from_phase,
+                'session_id': self.session_id
+            }
+            
+            logger.debug(f"Successfully transitioned to phase: {to_phase}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error handling phase transition: {str(e)}")
+            return False
+    
+    def _validate_phase_transition(self, from_phase: str, to_phase: str) -> bool:
+        """Validate that a phase transition is allowed."""
+        try:
+            workflow_state = st.session_state.get('workflow_state')
+            
+            # Allow backward transitions (user can always go back)
+            valid_phases = ["generate", "review", "feedback"]
+            if to_phase not in valid_phases:
+                return False
+            
+            # Allow transition to generate from any phase (restart)
+            if to_phase == "generate":
+                return True
+            
+            # Transition to review requires code
+            if to_phase == "review":
+                if workflow_state and hasattr(workflow_state, 'code_snippet'):
+                    return workflow_state.code_snippet is not None
+                return st.session_state.get("generation_completed", False)
+            
+            # Transition to feedback requires completed review
+            if to_phase == "feedback":
+                if workflow_state:
+                    review_sufficient = getattr(workflow_state, 'review_sufficient', False)
+                    current_iteration = getattr(workflow_state, 'current_iteration', 1)
+                    max_iterations = getattr(workflow_state, 'max_iterations', 3)
+                    return review_sufficient or current_iteration > max_iterations
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error validating phase transition: {str(e)}")
+            return False
+    
+    def ensure_phase_consistency(self) -> None:
+        """
+        Ensure workflow phase is consistent with workflow state.
+        """
+        try:
+            workflow_state = st.session_state.get('workflow_state')
+            current_phase = st.session_state.get('workflow_phase', 'generate')
+            
+            if workflow_state:
+                # Check if current phase makes sense given workflow state
+                has_code = hasattr(workflow_state, 'code_snippet') and workflow_state.code_snippet is not None
+                has_reviews = hasattr(workflow_state, 'review_history') and len(getattr(workflow_state, 'review_history', [])) > 0
+                review_complete = getattr(workflow_state, 'review_sufficient', False)
+                current_iteration = getattr(workflow_state, 'current_iteration', 1)
+                max_iterations = getattr(workflow_state, 'max_iterations', 3)
+                
+                # Auto-correct phase if needed
+                if has_code and not has_reviews and current_phase == "generate":
+                    # Have code but no reviews, should advance to review
+                    logger.debug("Auto-advancing to review phase - have code but no reviews")
+                    st.session_state.workflow_phase = "review"
+                    
+                elif (review_complete or current_iteration > max_iterations) and current_phase != "feedback":
+                    # Review complete, should advance to feedback
+                    logger.debug("Auto-advancing to feedback phase - review complete")
+                    st.session_state.workflow_phase = "feedback"
+                    
+                elif not has_code and current_phase in ["review", "feedback"]:
+                    # No code but in advanced phase, go back to generate
+                    logger.debug("Auto-correcting to generate phase - no code available")
+                    st.session_state.workflow_phase = "generate"
+            
+        except Exception as e:
+            logger.error(f"Error ensuring phase consistency: {str(e)}")
+    
+    def add_scroll_to_top_script(self) -> None:
+        """Add JavaScript to scroll to top of page."""
+        st.markdown("""
+        <script>
+        // Smooth scroll to top
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Auto scroll to top on page load/rerun
+        window.addEventListener('load', function() {
+            setTimeout(scrollToTop, 100);
+        });
+        
+        // Also trigger immediately
+        scrollToTop();
+        </script>
+        """, unsafe_allow_html=True)
+    
     def debug_session_state(self) -> Dict[str, Any]:
         """Get debug information about current session state."""
         try:
@@ -282,9 +412,11 @@ class SessionStateManager:
                 'session_id': self.session_id,
                 'total_keys': len(st.session_state.keys()),
                 'workflow_state_exists': 'workflow_state' in st.session_state,
+                'workflow_phase': st.session_state.get('workflow_phase', 'unknown'),
                 'active_locks': [k for k in st.session_state.keys() if k.startswith('state_lock_')],
                 'review_submissions': [k for k in st.session_state.keys() if 'review_submission' in k],
-                'code_generations': [k for k in st.session_state.keys() if 'code_generation' in k]
+                'code_generations': [k for k in st.session_state.keys() if 'code_generation' in k],
+                'phase_transitions': [k for k in st.session_state.keys() if 'phase_transition' in k]
             }
             
             if 'workflow_state' in st.session_state:
@@ -302,71 +434,5 @@ class SessionStateManager:
             logger.error(f"Error getting debug info: {str(e)}")
             return {'error': str(e)}
 
-    def handle_tab_transition_after_generation(self) -> bool:
-        """
-        Handle tab transition immediately after code generation.
-        
-        Returns:
-            True if transition was handled, False otherwise
-        """
-        try:
-            # Check if we just completed generation
-            if st.session_state.get("generation_completed", False):
-                workflow_state = st.session_state.get('workflow_state')
-                
-                if workflow_state and hasattr(workflow_state, 'code_snippet') and workflow_state.code_snippet:
-                    # Ensure we're on the review tab
-                    if st.session_state.get("active_tab", 0) != 2:
-                        logger.debug("Transitioning to review tab after generation")
-                        st.session_state.active_tab = 2
-                        
-                        # Update workflow step
-                        if hasattr(workflow_state, 'current_step'):
-                            workflow_state.current_step = "review"
-                        
-                        return True
-            
-            return False
-            
-        except Exception as e:
-            logger.error(f"Error handling tab transition: {str(e)}")
-            return False
-    
-    def ensure_tab_consistency(self) -> None:
-        """
-        Ensure tab state is consistent with workflow state.
-        """
-        try:
-            workflow_state = st.session_state.get('workflow_state')
-            current_tab = st.session_state.get('active_tab', 0)
-            
-            if workflow_state:
-                # Check if current tab makes sense given workflow state
-                has_code = hasattr(workflow_state, 'code_snippet') and workflow_state.code_snippet is not None
-                has_reviews = hasattr(workflow_state, 'review_history') and len(getattr(workflow_state, 'review_history', [])) > 0
-                review_complete = getattr(workflow_state, 'review_sufficient', False)
-                current_iteration = getattr(workflow_state, 'current_iteration', 1)
-                max_iterations = getattr(workflow_state, 'max_iterations', 3)
-                
-                # Auto-correct tab if needed
-                if has_code and not has_reviews and current_tab not in [0, 2]:
-                    # Have code but no reviews, should be on review tab
-                    logger.debug("Auto-correcting to review tab - have code but no reviews")
-                    st.session_state.active_tab = 2
-                    
-                elif review_complete or current_iteration > max_iterations:
-                    # Review complete, should be on feedback tab
-                    if current_tab not in [0, 1, 3]:  # Allow tutorial, generate (new cycle), feedback
-                        logger.debug("Auto-correcting to feedback tab - review complete")
-                        st.session_state.active_tab = 3
-                        
-                elif not has_code and current_tab == 2:
-                    # No code but on review tab, redirect to generate
-                    logger.debug("Auto-correcting to generate tab - no code available")
-                    st.session_state.active_tab = 1
-            
-        except Exception as e:
-            logger.error(f"Error ensuring tab consistency: {str(e)}")
-            
 # Global instance
 session_state_manager = SessionStateManager()
