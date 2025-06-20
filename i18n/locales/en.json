@@ -973,7 +973,8 @@
     "code_generated_successfully_switching_to_review_tab": "Code generated successfully! Switching to review phase...",
     "scroll_down_to_continue": "Scroll down to continue with the next phase",
     "phase_completed_continue_below": "This phase is completed. Continue below for the next step.",
-    "follow_workflow_sequentially":"Follow the workflow sequentially from top to bottom"
+    "follow_workflow_sequentially":"Follow the workflow sequentially from top to bottom",
+    "code_generated_successfully": "Code generated successfully!"
     
     
   }
