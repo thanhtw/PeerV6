@@ -994,6 +994,9 @@
     "follow_workflow_sequentially":"請按照工作流程順序進行操作",
     "code_generated_successfully": "程式碼生成成功！",
     "complete_code_generation_first": "請先完成程式碼生成",
-    "generating_your_java_code_challenge": "正在生成您的Java程式碼挑戰..."
+    "generating_your_java_code_challenge": "正在生成您的Java程式碼挑戰...",
+    "processing_your_review": "Processing your review...",
+    "review_submitted_successfully": "審查已成功提交！",
+    "please_provide_at_least_5_words.": "請提供至少 5 個字的更詳細的評論。"
   }
 }

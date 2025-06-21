@@ -410,7 +410,6 @@ class TutorialUI:
         </div>
         """, unsafe_allow_html=True)
 
-    # ADDED: Tutorial workflow phase management functions
     def _get_tutorial_workflow_info(self) -> Dict:
         """Get tutorial workflow information similar to practice workflow."""
         default_state = {
@@ -462,7 +461,7 @@ class TutorialUI:
             self._render_tutorial_setup_content()
 
     def _render_tutorial_compact_review_phase(self, workflow_info, current_phase):
-        """REVISED: Tutorial review phase using compact design."""
+        """Tutorial review phase using compact design."""
         has_code = workflow_info["has_code"]
         review_complete = workflow_info["review_complete"]
         
@@ -556,7 +555,6 @@ class TutorialUI:
         </script>
         """, unsafe_allow_html=True)
 
-    # Keep existing methods but make them more compact
     def _render_tutorial_setup_content(self):
         """Compact tutorial setup content."""
         practice_error = st.session_state.get("practice_error_data", {})
@@ -715,9 +713,6 @@ class TutorialUI:
             if st.button(f"🏠 {t('back_to_explorer')}", key="exit_to_explorer"):
                 self._exit_practice_mode_with_tracking()
 
-    # Keep all existing methods from the original code...
-    # (All the other methods remain the same, just the rendering methods above are revised)
-    
     def _get_categories(self) -> List[str]:
         """Get all available categories."""
         try:
@@ -872,7 +867,6 @@ class TutorialUI:
             ]
         return  self._sort_errors_by_difficulty(filtered)
        
-
     def _sort_errors_by_difficulty(self, errors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Sort errors by difficulty level (easy -> medium -> hard)."""
         difficulty_order = {'easy': 1, 'medium': 2, 'hard': 3}

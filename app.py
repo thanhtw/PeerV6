@@ -485,9 +485,9 @@ def render_compact_feedback_phase(workflow, auth_ui, workflow_info, current_phas
     
     # Show feedback interface (compact)
     with st.container():
-        st.markdown('<div class="compact-content">', unsafe_allow_html=True)
+        #st.markdown('<div class="compact-content">', unsafe_allow_html=True)
         render_feedback_tab(workflow, auth_ui)
-        st.markdown('</div>', unsafe_allow_html=True)
+        #st.markdown('</div>', unsafe_allow_html=True)
 
 def render_compact_review_tab(workflow, code_display_ui, workflow_info):
     """Render compact review tab with better state handling."""

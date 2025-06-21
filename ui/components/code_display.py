@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 class CodeDisplayUI:
     """
     Enhanced UI Component for displaying Java code snippets with professional styling.
-    FIXED: Resolved setIn error issues with proper state management.
     """
     
     def __init__(self):
@@ -463,7 +462,7 @@ class CodeDisplayUI:
                 return False
             
             # FIXED: Simple processing with fixed workflow
-            with st.spinner("🔄 Processing your review..."):
+            with st.spinner(f"🔄 {t('processing_your_review')}"):
                 user_id = st.session_state.auth.get("user_id")
                 if user_id:
                     try:
@@ -483,7 +482,7 @@ class CodeDisplayUI:
                 result = on_submit_callback(student_review_input.strip())
                 
                 if result:
-                    st.success("✅ Review submitted successfully!")
+                    st.success(f"✅ {t('review_submitted_successfully')}")
                     time.sleep(0.5)
                     st.rerun()
                     return True
@@ -529,7 +528,7 @@ class CodeDisplayUI:
             
             # Additional validation
             if len(cleaned_review.split()) < 5:
-                st.warning("Please provide a more detailed review with at least 5 words.")
+                st.warning(f"{t('please_provide_at_least_5_words')}")
                 self._safe_clear_processing_flag(processing_flag)
                 return False
             
@@ -575,7 +574,6 @@ class CodeDisplayUI:
                             st.rerun()
                         except Exception as rerun_error:
                             logger.error(f"Error during rerun: {str(rerun_error)}")
-                            st.success("✅ Review submitted successfully! Please refresh if the page doesn't update.")
                         
                         return True
                     else:
@@ -612,11 +610,11 @@ def render_review_tab(workflow, code_display_ui, auth_ui=None):
     
     # Simple state check
     if not hasattr(st.session_state, 'workflow_state') or not st.session_state.workflow_state:
-        st.info("📝 Please generate code first before reviewing.")
+        st.info(f"📝 {t('please_generate_code_first')}")
         return
         
     if not hasattr(st.session_state.workflow_state, 'code_snippet') or not st.session_state.workflow_state.code_snippet:
-        st.info("⚙️ Please complete code generation before review.")
+        st.info(f"⚙️ {t('please_generate_code_first')}")
         return
     
     # Display code
@@ -662,87 +660,9 @@ def _handle_review_submission_fixed(workflow, code_display_ui, auth_ui=None):
     else:
         # Show completion
         if review_sufficient:
-            st.success("🎉 Excellent work! Review completed successfully.")
+            st.success(f"🎉 {t('excellent_work')}")
         else:
-            st.info("⏰ Review session completed. Check the Feedback tab for results.")
+            st.info(f"⏰ {t('excellent_work')}")
  
-def _process_student_review(workflow, student_review: str) -> bool:
-    """
-    FIXED: Simplified review processing using fixed workflow.
-    """
-    try:
-        logger.debug("Processing review submission with fixed workflow")
-        
-        # Basic validation
-        if not workflow:
-            st.error("❌ No workflow available for review processing")
-            return False
-        
-        if not hasattr(st.session_state, 'workflow_state') or not st.session_state.workflow_state:
-            st.error("❌ No workflow state available. Please generate code first.")
-            return False
-        
-        # CRITICAL: Use the fixed workflow that won't regenerate code
-        logger.debug("Calling fixed workflow.submit_review (NO CODE REGENERATION)")
-        state = st.session_state.workflow_state
-        current_iteration = getattr(state, 'current_iteration', 1)
-        max_iterations = getattr(state, 'max_iterations', 3)
-        user_id = st.session_state.auth.get("user_id") if hasattr(st.session_state, 'auth') else None
-        if user_id:
-            try:
-                # FIXED: Safe review analysis
-                review_analysis = {
-                    "review_length": len(student_review),
-                    "word_count": len(student_review.split()),
-                    "line_count": len(student_review.split('\n')),
-                    "has_line_references": bool(re.search(r'line\s*\d+', student_review.lower())),
-                    "iteration": current_iteration,
-                    "max_iterations": max_iterations
-                }
-                
-                _log_user_interaction_code_display(
-                    user_id=user_id,
-                    interaction_category="practice",
-                    interaction_type="review_analysis_start",                   
-                    details={
-                        "analysis_step": "processing",
-                        "review_iteration": current_iteration,
-                        **review_analysis
-                    }
-                )
-            except Exception as log_error:
-                logger.warning(f"Could not log review start: {str(log_error)}")
-
-        updated_state = workflow.submit_review(st.session_state.workflow_state, student_review)
-        
-        # Simple error check
-        if hasattr(updated_state, 'error') and updated_state.error:
-            logger.error(f"Workflow returned error: {updated_state.error}")
-            st.error(f"❌ {updated_state.error}")
-            return False
-        
-        # Update session state
-        st.session_state.workflow_state = updated_state
-        
-        if user_id:
-            try:
-                _log_user_interaction_code_display(
-                    user_id=user_id,
-                    interaction_category="practice",
-                    interaction_type="review_analysis_complete",                    
-                    details={
-                        "analysis_step": "completed"
-                    }
-                )
-            except Exception as log_error:
-                        logger.warning(f"Could not log completion: {str(log_error)}")
-        
-        logger.debug("Review processing completed successfully")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error in review processing: {str(e)}", exc_info=True)
-        st.error(f"❌ Review processing failed: {str(e)}")
-        return False
 
 

@@ -129,18 +129,6 @@ class CodeGeneratorUI:
 
     def _render_configuration_section(self, user_level: str):
         """Render the configuration section with category selection only."""
-        # st.markdown('<div class="generate-section">', unsafe_allow_html=True)
-        
-        # Section header
-        # st.markdown(f"""
-        # <div class="section-header">
-        #     <span class="section-icon">⚙️</span>
-        #     <div>
-        #         <h3 class="section-title">{t('configuration')}</h3>
-        #         <p class="section-subtitle">{t('setup_code_generation_parameters')}</p>
-        #     </div>
-        # </div>
-        # """, unsafe_allow_html=True)
         
         # Parameters display
         self._render_parameters_display(user_level)

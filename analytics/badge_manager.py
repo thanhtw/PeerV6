@@ -900,9 +900,7 @@ class BadgeManager:
                 badges.append(badge.get('badge', {}))
         
         return badges
-    
-    
-    
+      
     def _get_perfect_review_count(self, user_id: str) -> int:
         """Get count of perfect reviews."""
         try:
@@ -924,8 +922,7 @@ class BadgeManager:
             self.db.execute_query(query, (user_id,))
         except Exception as e:
             logger.error(f"Error updating badge check timestamp: {str(e)}")
-    
-    
+     
     def _check_point_badges(self, user_id: str, total_points: int) -> None:
         """
         Check if a user qualifies for any point-based badges.
@@ -1201,7 +1198,6 @@ class BadgeManager:
             logger.error(f"Error getting user stats: {str(e)}")
             return None
     
-   
     def get_user_badges(self, user_id: str) -> List[Dict[str, Any]]:
         """Get all badges earned by a user."""
         if not user_id:

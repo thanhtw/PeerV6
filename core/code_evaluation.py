@@ -12,7 +12,6 @@ import json
 from typing import List, Dict, Any, Optional, Tuple
 from langchain_core.language_models import BaseLanguageModel
 
-from utils.llm_logger import LLMInteractionLogger
 from utils.code_utils import create_evaluation_prompt, create_regeneration_prompt, process_llm_response
 from utils.language_utils import t
 
