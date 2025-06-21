@@ -51,6 +51,52 @@ try:
 except Exception as e:
     logger.warning(f"CSS loading failed: {str(e)}")
 
+def scroll_to_current_phase():
+    """Enhanced auto-scroll to current workflow phase with smooth animation."""
+    workflow_phase = st.session_state.get('workflow_phase', 'generate')
+    
+    # Map workflow phases to their HTML element IDs
+    phase_mappings = {
+        'generate': 'generation-phase',
+        'review': 'review-phase', 
+        'feedback': 'feedback-phase'
+    }
+    
+    target_id = phase_mappings.get(workflow_phase, 'generation-phase')
+    
+    st.markdown(f"""
+    <script>
+    // Enhanced smooth scroll with better timing
+    function scrollToPhase() {{
+        const targetElement = document.getElementById('{target_id}');
+        if (targetElement) {{
+            // Add highlight effect
+            targetElement.style.boxShadow = '0 0 20px rgba(76, 104, 215, 0.3)';
+            targetElement.style.transform = 'scale(1.02)';
+            
+            // Smooth scroll with offset for better visibility
+            const yOffset = -20;
+            const elementPosition = targetElement.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset + yOffset;
+            
+            window.scrollTo({{
+                top: offsetPosition,
+                behavior: 'smooth'
+            }});
+            
+            // Remove highlight after animation
+            setTimeout(() => {{
+                targetElement.style.boxShadow = '';
+                targetElement.style.transform = '';
+            }}, 2000);
+        }}
+    }}
+    
+    // Wait for page to fully render then scroll
+    setTimeout(scrollToPhase, 300);
+    </script>
+    """, unsafe_allow_html=True)
+
 def scroll_to_top():
     """Add JavaScript to scroll to top of page."""
     st.markdown("""
@@ -60,11 +106,11 @@ def scroll_to_top():
     """, unsafe_allow_html=True)
 
 def _handle_workflow_progression():
-    """Handle workflow progression flags in one place."""
+    """Handle workflow progression flags with enhanced auto-scroll."""
     if st.session_state.get("should_switch_to_feedback", False):
         st.session_state.workflow_phase = "feedback"
         del st.session_state["should_switch_to_feedback"]
-        scroll_to_top()
+        scroll_to_current_phase()  # Enhanced scroll
         st.rerun()
         return True
     
@@ -72,14 +118,14 @@ def _handle_workflow_progression():
         workflow_controller.reset_workflow_for_new_cycle()
         st.session_state.workflow_phase = "generate"
         del st.session_state["should_start_new_cycle"]
-        scroll_to_top()
+        scroll_to_current_phase()  # Enhanced scroll
         st.rerun()
         return True
     
     if st.session_state.get("should_switch_to_review", False):
         st.session_state.workflow_phase = "review"
         del st.session_state["should_switch_to_review"]
-        scroll_to_top()
+        scroll_to_current_phase()  # Enhanced scroll
         st.rerun()
         return True
     
@@ -241,11 +287,11 @@ def render_normal_interface_with_two_tabs(code_generator_ui, workflow, code_disp
                                          error_explorer_ui, user_level):
     """Render the simplified two-tab interface."""
     
-    # Header with improved styling
+    # Header with improved styling and reduced size
     st.markdown(f"""
-    <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: rgb(178 185 213); margin-bottom: 5px;">{t('app_title')}</h1>
-        <p style="font-size: 1.1rem; color: #666;">{t('app_subtitle')}</p>
+    <div style="text-align: center; margin-bottom: 1rem;">
+        <h1 style="color: rgb(178 185 213); margin-bottom: 0.3rem; font-size: 1.8rem;">{t('app_title')}</h1>
+        <p style="font-size: 1rem; color: #666; margin-bottom: 0.5rem;">{t('app_subtitle')}</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -292,199 +338,247 @@ def render_normal_interface_with_two_tabs(code_generator_ui, workflow, code_disp
             st.error("Error in practice section. Please refresh the page.")
 
 def render_unified_practice_workflow(code_generator_ui, workflow, code_display_ui, auth_ui, user_level):
-    """Render the unified practice workflow in a single scrollable tab."""
+    """Render the unified practice workflow with compact, user-friendly design."""
     
     # Get workflow state
     workflow_info = workflow_controller.get_workflow_state_info()
     current_phase = st.session_state.get('workflow_phase', 'generate')
     
-    # Add scroll to top CSS
+    # Enhanced CSS for compact, user-friendly design
     st.markdown("""
     <style>
-    .practice-phase {
-        margin-bottom: 3rem;
+    .compact-practice-phase {
+        margin-bottom: 1.5rem;
         padding: 1rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
     }
-    .phase-completed {
+    .compact-practice-phase:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+    .compact-phase-completed {
         background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         border-color: #28a745;
     }
-    .phase-active {
+    .compact-phase-active {
         background: linear-gradient(135deg, #fff3cd 0%, #fef8e1 100%);
         border-color: #ffc107;
+        animation: compact-pulse 2s ease-in-out infinite;
     }
-    .phase-upcoming {
+    .compact-phase-upcoming {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border-color: #6c757d;
-        opacity: 0.7;
+        opacity: 0.8;
     }
-    .phase-header {
+    .compact-phase-header {
         display: flex;
         align-items: center;
-        margin-bottom: 1.5rem;
-        font-size: 1.5rem;
-        font-weight: 700;
-    }
-    .phase-icon {
-        margin-right: 1rem;
-        font-size: 2rem;
-    }
-    .phase-title {
-        flex: 1;
-    }
-    .phase-status {
-        font-size: 0.9rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
         font-weight: 600;
     }
-    .status-completed { background: #28a745; color: white; }
-    .status-active { background: #ffc107; color: #212529; }
-    .status-upcoming { background: #6c757d; color: white; }
+    .compact-phase-icon {
+        margin-right: 0.5rem;
+        font-size: 1.2rem;
+    }
+    .compact-phase-title {
+        flex: 1;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    .compact-phase-status {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .compact-status-completed { background: #28a745; color: white; }
+    .compact-status-active { background: #ffc107; color: #212529; }
+    .compact-status-upcoming { background: #6c757d; color: white; }
+    
+    @keyframes compact-pulse {
+        0%, 100% { box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2); }
+        50% { box-shadow: 0 4px 16px rgba(255, 193, 7, 0.4); }
+    }
+    
+    /* Compact content areas */
+    .compact-content {
+        margin-top: 0.75rem;
+    }
+    
+    /* Reduced button sizes */
+    .stButton > button {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.9rem !important;
+        height: auto !important;
+    }
+    
+    /* Compact form elements */
+    .stTextArea textarea {
+        min-height: 200px !important;
+    }
+    
+    /* Compact metrics display */
+    .compact-metrics {
+        display: flex;
+        gap: 1rem;
+        margin: 0.5rem 0;
+    }
+    .compact-metric {
+        text-align: center;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.5rem;
+        border-radius: 6px;
+        min-width: 60px;
+    }
+    .compact-metric-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+    .compact-metric-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # Phase 1: Code Generation
-    render_generation_phase(code_generator_ui, workflow_info, current_phase, user_level, code_generator_ui)
+    # Phase 1: Code Generation (Compact Design)
+    render_compact_generation_phase(code_generator_ui, workflow_info, current_phase, user_level)
     
-    # Phase 2: Code Review  
-    render_review_phase(workflow, code_display_ui, workflow_info, current_phase)
+    # Phase 2: Code Review (Compact Design)
+    render_compact_review_phase(workflow, code_display_ui, workflow_info, current_phase)
     
-    # Phase 3: Feedback
-    render_feedback_phase(workflow, auth_ui, workflow_info, current_phase)
+    # Phase 3: Feedback (Compact Design)
+    render_compact_feedback_phase(workflow, auth_ui, workflow_info, current_phase)
 
-def render_generation_phase(code_generator_ui, workflow_info, current_phase, user_level, code_display_ui):
-    """Render the code generation phase."""
+def render_compact_generation_phase(code_generator_ui, workflow_info, current_phase, user_level):
+    """Render compact code generation phase."""
     
     # Determine phase status
     if workflow_info["has_code"]:
-        phase_class = "phase-completed"
-        status_class = "status-completed"
+        phase_class = "compact-phase-completed"
+        status_class = "compact-status-completed"
         status_text = t("completed")
     elif current_phase == "generate":
-        phase_class = "phase-active"
-        status_class = "status-active" 
+        phase_class = "compact-phase-active"
+        status_class = "compact-status-active" 
         status_text = t("active")
     else:
-        phase_class = "phase-upcoming"
-        status_class = "status-upcoming"
+        phase_class = "compact-phase-upcoming"
+        status_class = "compact-status-upcoming"
         status_text = t("pending")
     
     st.markdown(f"""
-    <div class="practice-phase {phase_class}" id="generation-phase">
-        <div class="phase-header">
-            <span class="phase-icon">🔧</span>
-            <span class="phase-title">{t('phase_1_generate_code')}</span>
-            <span class="phase-status {status_class}">{status_text}</span>
+    <div class="compact-practice-phase {phase_class}" id="generation-phase">
+        <div class="compact-phase-header">
+            <span class="compact-phase-icon">🔧</span>
+            <span class="compact-phase-title">{t('phase_1_generate_code')}</span>
+            <span class="compact-phase-status {status_class}">{status_text}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     if current_phase == "generate" or not workflow_info["has_code"]:
-        # Show generation interface
+        # Show generation interface with compact design
         if workflow_info["review_complete"]:
             st.success("🎉 " + t("previous_review_completed"))
             
-            col1, col2 = st.columns([2, 1])
+            col1, col2 = st.columns([3, 1])
             with col1:
                 st.info("💡 " + t("start_new_review_cycle"))
             with col2:
-                if st.button("🔄 " + t("start_new_cycle"), type="primary"):
+                if st.button("🔄 " + t("start_new_cycle"), type="primary", use_container_width=True):
                     workflow_controller.reset_workflow_for_new_cycle()
                     st.session_state.workflow_phase = "generate"
-                    scroll_to_top()
+                    scroll_to_current_phase()
                     st.rerun()
         
-        code_generator_ui.render(user_level)
+        # Compact content area
+        with st.container():
+            st.markdown('<div class="compact-content">', unsafe_allow_html=True)
+            code_generator_ui.render(user_level)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         # Auto-advance to review if code is generated
         if workflow_info["has_code"] and current_phase == "generate":
             st.session_state.workflow_phase = "review"
-            scroll_to_top()
+            scroll_to_current_phase()
             st.rerun()
 
-def render_review_phase(workflow, code_display_ui, workflow_info, current_phase):
-    """Render the code review phase."""
+def render_compact_review_phase(workflow, code_display_ui, workflow_info, current_phase):
+    """Render compact code review phase."""
     
     # Determine phase status
     if workflow_info["review_complete"]:
-        phase_class = "phase-completed"
-        status_class = "status-completed"
+        phase_class = "compact-phase-completed"
+        status_class = "compact-status-completed"
         status_text = t("completed")
     elif workflow_info["has_code"] and not workflow_info["review_complete"]:
-        phase_class = "phase-active"
-        status_class = "status-active"
+        phase_class = "compact-phase-active"
+        status_class = "compact-status-active"
         status_text = t("active")
     else:
-        phase_class = "phase-upcoming"
-        status_class = "status-upcoming"
+        phase_class = "compact-phase-upcoming"
+        status_class = "compact-status-upcoming"
         status_text = t("pending")
     
     st.markdown(f"""
-    <div class="practice-phase {phase_class}" id="review-phase">
-        <div class="phase-header">
-            <span class="phase-icon">📋</span>
-            <span class="phase-title">{t('phase_2_review_code')}</span>
-            <span class="phase-status {status_class}">{status_text}</span>
+    <div class="compact-practice-phase {phase_class}" id="review-phase">
+        <div class="compact-phase-header">
+            <span class="compact-phase-icon">📋</span>
+            <span class="compact-phase-title">{t('phase_2_review_code')}</span>
+            <span class="compact-phase-status {status_class}">{status_text}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
     if not workflow_info["has_code"]:
-        st.info("📝 " + t("complete_code_generation_first"))
+        logger.info("📝 " + t("complete_code_generation_first"))
         return
     
     if workflow_info["review_complete"]:
-        # Show completed review summary
-        st.success("🎉 " + t("review_completed_successfully"))
-        
-      
-        # Option to restart review
-        if st.button("🔄 " + t("restart_review"), key="restart_review_from_summary"):
-            # Reset review state
-            if hasattr(st.session_state, 'workflow_state'):
-                state = st.session_state.workflow_state
-                state.review_history = []
-                state.current_iteration = 1
-                state.review_sufficient = False
-                state.comparison_report = None
-            
-            st.session_state.workflow_phase = "review"
-            scroll_to_top()
-            st.rerun()
+        logger.info("🎉 " + t("review_completed_successfully"))
     
     else:
-        # Show active review interface
-        render_improved_review_tab(workflow, code_display_ui, workflow_info)
+        # Show active review interface (compact)
+        with st.container():
+            st.markdown('<div class="compact-content">', unsafe_allow_html=True)
+            render_compact_review_tab(workflow, code_display_ui, workflow_info)
+            st.markdown('</div>', unsafe_allow_html=True)
         
         # Auto-advance to feedback if review is complete
         if workflow_info["review_complete"]:
             st.session_state.workflow_phase = "feedback"
-            scroll_to_top()
+            scroll_to_current_phase()
             st.rerun()
 
-def render_feedback_phase(workflow, auth_ui, workflow_info, current_phase):
-    """Render the feedback phase."""
+def render_compact_feedback_phase(workflow, auth_ui, workflow_info, current_phase):
+    """Render compact feedback phase."""
     
     # Determine phase status
     if workflow_info["review_complete"]:
-        phase_class = "phase-active"
-        status_class = "status-active"
+        phase_class = "compact-phase-active"
+        status_class = "compact-status-active"
         status_text = t("active")
     else:
-        phase_class = "phase-upcoming"
-        status_class = "status-upcoming"
+        phase_class = "compact-phase-upcoming"
+        status_class = "compact-status-upcoming"
         status_text = t("pending")
     
     st.markdown(f"""
-    <div class="practice-phase {phase_class}" id="feedback-phase">
-        <div class="phase-header">
-            <span class="phase-icon">📊</span>
-            <span class="phase-title">{t('phase_3_feedback')}</span>
-            <span class="phase-status {status_class}">{status_text}</span>
+    <div class="compact-practice-phase {phase_class}" id="feedback-phase">
+        <div class="compact-phase-header">
+            <span class="compact-phase-icon">📊</span>
+            <span class="compact-phase-title">{t('phase_3_feedback')}</span>
+            <span class="compact-phase-status {status_class}">{status_text}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -495,13 +589,16 @@ def render_feedback_phase(workflow, auth_ui, workflow_info, current_phase):
         st.info(f"📊 {progress_text}")
         return
     
-    # Show feedback interface
-    render_feedback_tab(workflow, auth_ui)
+    # Show feedback interface (compact)
+    with st.container():
+        st.markdown('<div class="compact-content">', unsafe_allow_html=True)
+        render_feedback_tab(workflow, auth_ui)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-def render_improved_review_tab(workflow, code_display_ui, workflow_info):
-    """Render the improved review tab with better state handling."""
+def render_compact_review_tab(workflow, code_display_ui, workflow_info):
+    """Render compact review tab with better state handling."""
     
-    logger.debug(f"Rendering review tab with workflow_info: {workflow_info}")
+    logger.debug(f"Rendering compact review tab with workflow_info: {workflow_info}")
     
     # Check state
     if not hasattr(st.session_state, 'workflow_state') or not st.session_state.workflow_state:
@@ -514,27 +611,27 @@ def render_improved_review_tab(workflow, code_display_ui, workflow_info):
     # Check for code
     if not hasattr(state, 'code_snippet') or not state.code_snippet:
         st.markdown(f"""
-        <div class="unavailable-state">
-            <div class="state-icon">⚙️</div>
-            <h3>{t('no_code_available')}</h3>
-            <p>{t('generate_code_snippet_first')}</p>
+        <div style="text-align: center; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; margin: 1rem 0;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚙️</div>
+            <h4 style="margin: 0; color: #495057;">{t('no_code_available')}</h4>
+            <p style="margin: 0.5rem 0 0 0; color: #6c757d;">{t('generate_code_snippet_first')}</p>
         </div>
         """, unsafe_allow_html=True)
         return
     
-    # Render review interface
+    # Compact review interface
     st.markdown(f"""
-    <div style="margin-bottom: 2rem;">
-        <h3 style="color: #495057; margin-bottom: 0.5rem; font-size: 1.5rem; font-weight: 700;">
+    <div style="margin-bottom: 1rem;">
+        <h4 style="color: #495057; margin: 0; font-size: 1.2rem; font-weight: 600;">
             📋 {t('review_java_code')}
-        </h3>
-        <p style="color: #6c757d; margin: 0; font-size: 1rem;">
+        </h4>
+        <p style="color: #6c757d; margin: 0.3rem 0 0 0; font-size: 0.9rem;">
             {t('carefully_examine_code')}
         </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Show workflow progress in review
+    # Show workflow progress in review (compact)
     if workflow_info["in_review"]:
         progress_text = f"📍 {t('review_in_progress')} - {t('iteration')} {workflow_info['current_iteration']}/{workflow_info['max_iterations']}"
         st.info(progress_text)
@@ -548,15 +645,15 @@ def render_improved_review_tab(workflow, code_display_ui, workflow_info):
         st.error(f"Error displaying code: {str(display_error)}")
         return
     
-    # Handle review submission
+    # Handle review submission (compact)
     try:
-        _handle_review_submission_with_workflow_control(workflow, code_display_ui, workflow_info)
+        _handle_compact_review_submission(workflow, code_display_ui, workflow_info)
     except Exception as submission_error:
         logger.error(f"Error in review submission handling: {str(submission_error)}")
         st.error(f"Error in review submission: {str(submission_error)}")
 
-def _handle_review_submission_with_workflow_control(workflow, code_display_ui, workflow_info):
-    """Handle review submission with workflow control."""
+def _handle_compact_review_submission(workflow, code_display_ui, workflow_info):
+    """Handle review submission with compact design."""
     
     state = st.session_state.workflow_state
     
@@ -569,8 +666,8 @@ def _handle_review_submission_with_workflow_control(workflow, code_display_ui, w
     targeted_guidance = getattr(latest_review, "targeted_guidance", None) if latest_review else None
     review_analysis = getattr(latest_review, "analysis", None) if latest_review else None
     
-    # Simple callback for workflow-controlled submission
-    def on_submit_with_workflow_control(review_text):
+    # Compact callback for workflow-controlled submission
+    def on_submit_compact(review_text):
         try:
             logger.debug(f"Submitting review: {review_text[:100]}...")
             updated_state = workflow.submit_review(state, review_text)
@@ -589,7 +686,7 @@ def _handle_review_submission_with_workflow_control(workflow, code_display_ui, w
             if review_sufficient or new_iteration > max_iterations:
                 logger.debug("Review completed, transitioning to feedback")
                 st.session_state.workflow_phase = "feedback"
-                scroll_to_top()
+                scroll_to_current_phase()
                 
             return True
             
@@ -598,10 +695,10 @@ def _handle_review_submission_with_workflow_control(workflow, code_display_ui, w
             st.error(f"❌ Error submitting review: {str(e)}")
             return False
     
-    # Render review input
+    # Render compact review input
     try:
         code_display_ui.render_review_input(
-            on_submit_callback=on_submit_with_workflow_control,
+            on_submit_callback=on_submit_compact,
             iteration_count=current_iteration,
             max_iterations=max_iterations,
             targeted_guidance=targeted_guidance,
