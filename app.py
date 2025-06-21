@@ -444,9 +444,9 @@ def render_compact_review_phase(workflow, code_display_ui, workflow_info, curren
     else:
         # Show active review interface (compact)
         with st.container():
-            st.markdown('<div class="compact-content">', unsafe_allow_html=True)
+            #st.markdown('<div class="compact-content">', unsafe_allow_html=True)
             render_compact_review_tab(workflow, code_display_ui, workflow_info)
-            st.markdown('</div>', unsafe_allow_html=True)
+            #st.markdown('</div>', unsafe_allow_html=True)
         
         # Auto-advance to feedback if review is complete
         if workflow_info["review_complete"]:
