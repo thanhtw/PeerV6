@@ -575,7 +575,7 @@ class CodeGeneratorUI:
         
         st.session_state.workflow_start_time = generation_start_time
         
-        with st.spinner("🔧 Generating your Java code challenge..."):
+        with st.spinner(f"🔧 {t('generating_your_java_code_challenge')}"):
             try:
                 logger.debug("Starting code generation through workflow manager")
                 

@@ -1,6 +1,9 @@
 /* CSS for box selcted */
 /* Updated styling for selected boxes */
 /* Apply subtle hover effect for radio options */
+.st-emotion-cache-t1wise{
+  padding: 0 6em 6em 6em !important;
+}
 .stRadio [data-baseweb="radio"]:hover {
   background-color: rgba(220, 53, 69, 0.05);
   border-radius: 5px;

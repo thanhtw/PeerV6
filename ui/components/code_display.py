@@ -444,13 +444,13 @@ class CodeDisplayUI:
             value="", 
             height=350,
             key=text_area_key,
-            placeholder=f"Example:\nLine 5: Missing semicolon\nLine 12: Null pointer risk...",
+            placeholder=f"{t('review_format_example')}",
             label_visibility="collapsed"
         )
         
         
         submit_button = st.button(
-                f"🚀 {t('submit_review_button')} (Attempt {iteration_count})", 
+                f"🚀 {t('submit_review_button')} ({t('attempt')} {iteration_count})", 
                 type="primary", 
                 use_container_width=True,
                 key=submit_button_key

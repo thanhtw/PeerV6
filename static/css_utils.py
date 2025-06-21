@@ -56,7 +56,7 @@ def load_css(css_file=None, css_directory=None):
             error_explorer_dir = os.path.join(css_directory, "error_explorer")
             if os.path.exists(error_explorer_dir) and os.path.isdir(error_explorer_dir):
                 # Define loading order for error explorer CSS
-                error_explorer_files = ["header.css", "layout.css", "cards.css", "practice_mode.css"]
+                error_explorer_files = ["header.css", "layout.css", "cards.css", "practice_mode.css", "tutorial.css"]
                 
                 for filename in error_explorer_files:
                     file_path = os.path.join(error_explorer_dir, filename)
@@ -181,7 +181,7 @@ def load_css_safe(css_file=None, css_directory=None, encoding='utf-8'):
         error_explorer_dir = os.path.join(css_directory, "error_explorer")
         if os.path.exists(error_explorer_dir) and os.path.isdir(error_explorer_dir):
             # Define loading order for error explorer CSS
-            error_explorer_files = ["header.css", "layout.css", "cards.css", "practice_mode.css"]
+            error_explorer_files = ["header.css", "layout.css", "cards.css", "practice_mode.css", "tutorial.css"]
             
             for filename in error_explorer_files:
                 file_path = os.path.join(error_explorer_dir, filename)

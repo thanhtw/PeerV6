@@ -56,6 +56,12 @@ class TutorialUI:
             css_dir = os.path.join(current_dir, "..", "..", "static", "css", "error_explorer")
             from static.css_utils import load_css_safe
             result = load_css_safe(css_directory=css_dir)
+            
+            # Also load tutorial-specific CSS
+            tutorial_css_path = os.path.join(css_dir, "tutorial.css")
+            if os.path.exists(tutorial_css_path):
+                result_tutorial = load_css_safe(css_file=tutorial_css_path)
+                
         except Exception as e:
             logger.error(f"Error loading Tutorial CSS: {str(e)}")
             st.warning(t("css_loading_warning"))
@@ -110,26 +116,26 @@ class TutorialUI:
     def _render_compact_practice_header(self, error_name: str, difficulty: str, category: str):
         """REVISED: Compact practice header (reduced size)."""
         difficulty_config = {
-            "easy": {"color": "#28a745", "icon": "🟢", "bg": "#d4edda"},
-            "medium": {"color": "#ffc107", "icon": "🟡", "bg": "#fff3cd"},
-            "hard": {"color": "#dc3545", "icon": "🔴", "bg": "#f8d7da"}
+            "easy": {"class": "difficulty-easy", "icon": "🟢"},
+            "medium": {"class": "difficulty-medium", "icon": "🟡"},
+            "hard": {"class": "difficulty-hard", "icon": "🔴"}
         }
         
         config = difficulty_config.get(difficulty, difficulty_config["medium"])
         category_icon = _get_category_icon(category.lower()) if category else "📚"
         
         st.markdown(f"""
-        <div class="compact-practice-phase compact-phase-active" style="margin-bottom: 1rem; padding: 1rem;">
+        <div class="compact-practice-phase compact-phase-active">
             <div class="compact-phase-header">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <span class="compact-phase-icon">🎯</span>
                     <div>
-                        <h3 style="margin: 0; font-size: 1.3rem;">{error_name}</h3>
+                        <h3 class="compact-phase-title">{error_name}</h3>
                         <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                            <span style="background: {config['bg']}; color: {config['color']}; padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem;">
+                            <span class="difficulty-badge {config['class']}">
                                 {config['icon']} {t(difficulty)}
                             </span>
-                            <span style="background: rgba(108, 117, 125, 0.1); padding: 0.25rem 0.75rem; border-radius: 15px; font-size: 0.8rem;">
+                            <span class="category-badge">
                                 {category_icon} {category}
                             </span>
                         </div>
@@ -158,13 +164,13 @@ class TutorialUI:
             practice_stats = {}           
         
         st.markdown(f"""
-        <div class="compact-practice-phase" style="margin-bottom: 1.5rem; padding: 1rem;">
+        <div class="compact-practice-phase">
             <div class="compact-phase-header">
                 <div>
-                    <h2 style="margin: 0; font-size: 1.4rem; font-weight: 700;">🔍 {t('error_explorer')}</h2>
+                    <h2 class="compact-phase-title">🔍 {t('error_explorer')}</h2>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">{t('explore_comprehensive_error_library')}</p>
                 </div>
-                <div style="display: flex; gap: 1rem; align-items: center;">
+                <div class="compact-metrics">
                     <div class="compact-metric">
                         <div class="compact-metric-value">{total_errors}</div>
                         <div class="compact-metric-label">{t('errors')}</div>
@@ -186,10 +192,10 @@ class TutorialUI:
         """REVISED: More compact search and filter controls."""
         user_id = st.session_state.auth.get("user_id") if "auth" in st.session_state else None
         
-        st.markdown('<div class="compact-practice-phase" style="padding: 1rem;">', unsafe_allow_html=True)
+        
         
         # More compact filter controls
-        col1, col2, col3, col4 = st.columns([3, 2, 2, 2])
+        col1, col2, col3 = st.columns([3, 2, 2])
         
         with col1:
             search_term = st.text_input(
@@ -206,16 +212,8 @@ class TutorialUI:
                 options=[t('all_categories')] + categories,
                 key="category_filter_compact"
             )
-        
+    
         with col3:
-            difficulty_levels = [t('all_levels'), t('easy'), t('medium'), t('hard')]
-            selected_difficulty = st.selectbox(
-                f"⚡ {t('difficulty')}",
-                options=difficulty_levels,
-                key="difficulty_filter_compact"
-            )
-        
-        with col4:
             if user_id:
                 practice_filters = [t('all_errors'), t('practiced_errors'), t('unpracticed_errors'), 
                                   t('completed_errors'), t('mastered_errors')]
@@ -227,12 +225,10 @@ class TutorialUI:
             else:
                 selected_practice = t('all_errors')
         
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+       
         # Store filter values
         st.session_state.search_term = search_term
         st.session_state.selected_category = selected_category
-        st.session_state.selected_difficulty = selected_difficulty
         st.session_state.selected_practice = selected_practice
 
     def _render_compact_error_content(self, user_id: str):
@@ -271,13 +267,13 @@ class TutorialUI:
             completion_percentage = (completed_count / total_count * 100) if total_count > 0 else 0
             
             st.markdown(f"""
-            <div class="compact-practice-phase compact-phase-upcoming" style="margin-bottom: 1rem;">
+            <div class="compact-practice-phase compact-phase-upcoming">
                 <div class="compact-phase-header">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <span class="compact-phase-icon">{_get_category_icon(category_name.lower())}</span>
-                        <h4 style="margin: 0; font-size: 1.1rem;">{category_name}</h4>
+                        <h4 class="compact-phase-title">{category_name}</h4>
                     </div>
-                    <div class="compact-metrics" style="display: flex; gap: 0.5rem;">
+                    <div class="compact-metrics">
                         <div class="compact-metric">
                             <div class="compact-metric-value">{total_count}</div>
                             <div class="compact-metric-label">{t('total')}</div>
@@ -344,7 +340,7 @@ class TutorialUI:
                 
             if description:
                 st.markdown(f"""
-                    <div style="background: #e3f2fd; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.75rem; border-left: 3px solid #2196f3;">
+                    <div class="error-detail-card">
                         <strong>📋 {t('what_is_this_error')}:</strong><br>
                         {description}
                     </div>
@@ -352,7 +348,7 @@ class TutorialUI:
                 
             if implementation_guide:
                 st.markdown(f"""
-                    <div style="background: #e8f5e8; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.75rem; border-left: 3px solid #4caf50;">
+                    <div class="error-detail-card" style="background: #e8f5e8; border-left-color: #4caf50;">
                         <strong>💡 {t('how_to_fix')}:</strong><br>
                         {implementation_guide}
                     </div>
@@ -407,10 +403,10 @@ class TutorialUI:
     def _render_compact_no_results(self):
         """REVISED: Compact no results message."""
         st.markdown(f"""
-        <div class="compact-practice-phase" style="text-align: center; padding: 2rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.6;">🔍</div>
-            <h4 style="color: #6c757d; margin-bottom: 0.5rem;">{t('no_errors_found')}</h4>
-            <p style="color: #6c757d; margin: 0;">{t('no_errors_found_message')}</p>
+        <div class="compact-practice-phase no-results-container">
+            <div class="no-results-icon">🔍</div>
+            <h4 class="no-results-title">{t('no_errors_found')}</h4>
+            <p class="no-results-message">{t('no_errors_found_message')}</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -589,7 +585,7 @@ class TutorialUI:
         with col1:
             if description:
                 st.markdown(f"""
-                <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; border-left: 3px solid #2196f3;">
+                <div class="what-youll-learn">
                     <strong>📝 {t('what_youll_learn')}:</strong><br>
                     {description}
                 </div>
@@ -598,7 +594,7 @@ class TutorialUI:
         with col2:
             difficulty = practice_error.get('difficulty_level', 'medium')
             st.markdown(f"""
-            <div style="background: #f8f9fa; padding: 1rem; border-radius: 6px; text-align: center;">
+            <div class="error-description-card">
                 <div><strong>{t('difficulty')}:</strong> {t(difficulty)}</div>
                 <div style="margin-top: 0.5rem;"><strong>{t('focus')}:</strong> {t('single_error_type')}</div>
             </div>
@@ -618,9 +614,9 @@ class TutorialUI:
         code_to_display = workflow_state.code_snippet.clean_code
         
         st.markdown(f"""
-        <div style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 6px 6px 0 0; border-bottom: 1px solid #dee2e6;">
-            <strong>📄 PracticeChallenge.java</strong>
-            <span style="float: right; font-size: 0.8rem;">☕ Java</span>
+        <div class="code-header">
+            <span class="code-filename">📄 PracticeChallenge.java</span>
+            <span class="code-language">☕ Java</span>
         </div>
         """, unsafe_allow_html=True)
         
@@ -637,7 +633,7 @@ class TutorialUI:
         max_iterations = getattr(workflow_state, 'max_iterations', 3)
         
         st.markdown(f"""
-        <div style="background: #fff3cd; padding: 1rem; border-radius: 6px; margin: 1rem 0; border-left: 3px solid #ffc107;">
+        <div class="review-input-header">
             <strong>✍️ {t('submit_your_analysis')} ({t('attempt')} {current_iteration}/{max_iterations})</strong>
         </div>
         """, unsafe_allow_html=True)
@@ -651,7 +647,7 @@ class TutorialUI:
             label_visibility="collapsed"
         )
         
-        col1, col2, col3 = st.columns([4, 4, 2])
+        col1, col2, col3 = st.columns([6, 6, 4])
         
         with col1:
             if st.button(f"🚀 {t('submit_review_button')}", key="submit_tutorial_review", type="primary"):
@@ -682,9 +678,9 @@ class TutorialUI:
         
         # Compact feedback header
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); padding: 1.5rem; border-radius: 6px; text-align: center; margin-bottom: 1rem;">
-            <h3 style="margin: 0; color: #155724;">🎉 {t('practice_session_complete')}</h3>
-            <p style="margin: 0.5rem 0 0 0; color: #155724;">{t('excellent_work_analysis_complete')}</p>
+        <div class="feedback-complete-header">
+            <h3 class="feedback-complete-title">🎉 {t('practice_session_complete')}</h3>
+            <p class="feedback-complete-subtitle">{t('excellent_work_analysis_complete')}</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -699,31 +695,13 @@ class TutorialUI:
         review_history = getattr(workflow_state, 'review_history', [])
         
         if review_history:
-            latest_review = review_history[-1]
-            analysis = getattr(latest_review, 'analysis', {}) if hasattr(latest_review, 'analysis') else {}
-            
-            identified = analysis.get(t('identified_count'), 0)
-            total = analysis.get(t('total_problems'), 1)
-            accuracy = analysis.get(t('identified_percentage'), 0)
-            attempts = len(review_history)
-            
-            # Compact metrics
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric(f"🎯 {t('issues_identified')}", f"{identified}/{total}")
-            with col2:
-                st.metric(f"📈 {t('accuracy_score')}", f"{accuracy:.1f}%")
-            with col3:
-                st.metric(f"🔄 {t('attempts_used')}", f"{attempts}")
-            
-            # Compact feedback
             comparison_report = getattr(workflow_state, 'comparison_report', None)
             if comparison_report:               
                 self.comparison_renderer.render_comparison_report(comparison_report)
 
     def _render_compact_action_panel(self):
         """REVISED: Compact action panel."""
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3 = st.columns([4,4,2])
         
         with col1:
             if st.button(f"🔄 {t('try_another_challenge')}", key="restart_tutorial", type="primary"):
@@ -769,11 +747,10 @@ class TutorialUI:
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        t('error_code'): error['error_code'],
-                        t("error_name"): error['error_name'],
-                        t("description"): error['description'],
-                        t('difficulty_level'): error['difficulty_level'],
-                        t('category'): error['category'],
+                        t('error_code'): error[t('error_code')],
+                        t("error_name"): error[t('error_name')],
+                        t('difficulty_level'): error[t('difficulty_level')],
+                        t('category'): error[t('category')],
                         t('practice_stats'): error
                     })
                 return self._apply_standard_filters(formatted_errors)
@@ -785,10 +762,9 @@ class TutorialUI:
                     formatted_errors.append({
                         t('error_code'): error['error_code'],
                         t("error_name"): error['error_name'],
-                        t("description"): error['description'],
-                        t("implementation_guide"): error['implementation_guide'],
+                        t('description'): error.get('description'),  
                         t('difficulty_level'): error['difficulty_level'],
-                        t('category'): error['category'],
+                        t('category'): error['category_name'],
                         t('practice_stats'): None
                     })
                 return self._apply_standard_filters(formatted_errors)
@@ -799,11 +775,10 @@ class TutorialUI:
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        t('error_code'): error['error_code'],
-                        t("error_name"): error['error_name'],
-                        t("description"): error['description'],
-                        t('difficulty_level'): error['difficulty_level'],
-                        t('category'): error['category'],
+                        t('error_code'): error[t('error_code')],
+                        t("error_name"): error[t('error_name')],
+                        t('difficulty_level'): error[t('difficulty_level')],
+                        t('category'): error[t('category')],
                         t('practice_stats'): error
                     })
                 return self._apply_standard_filters(formatted_errors)
@@ -814,11 +789,10 @@ class TutorialUI:
                 formatted_errors = []
                 for error in errors:
                     formatted_errors.append({
-                        t('error_code'): error['error_code'],
-                        t("error_name"): error['error_name'],
-                        t("description"):error['description'],
-                        t('difficulty_level'): error['difficulty_level'],
-                        t('category'): error['category'],
+                        t('error_code'): error[t('error_code')],
+                        t("error_name"): error[t('error_name')],
+                        t('difficulty_level'): error[t('difficulty_level')],
+                        t('category'): error[t('category')],
                         t('practice_stats'): error
                     })
                 return self._apply_standard_filters(formatted_errors)
@@ -896,21 +870,8 @@ class TutorialUI:
                 search_term in error.get(t("description"), "").lower() or
                 search_term in error.get(t("implementation_guide"), "").lower()
             ]
-        
-        selected_difficulty = st.session_state.get('selected_difficulty', t('all_levels'))
-        if selected_difficulty != t('all_levels'):
-            difficulty_map = {
-                t("easy"): "easy",
-                t("medium"): "medium",
-                t("hard"): "hard"
-            }
-            db_difficulty = difficulty_map.get(selected_difficulty, "medium")
-            filtered = [
-                error for error in filtered
-                if error.get('difficulty_level') == db_difficulty
-            ]
-        
-        return filtered
+        return  self._sort_errors_by_difficulty(filtered)
+       
 
     def _sort_errors_by_difficulty(self, errors: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Sort errors by difficulty level (easy -> medium -> hard)."""

@@ -632,7 +632,7 @@
     "naming_conventions": "命名規範",
     "code_formatting": "程式碼格式",
     "documentation": "註解與文件",
-    "review_format_example": "第5行：可能出現除以零。第9行：字串比較應使用.equals()。第13行：迴圈條件有偏移錯誤。",
+    "review_format_example": "第5行：可能出現除以零。",
     "review_guidance": "審查指引",
     "review_guidelines": "審查指南",
     "review_placeholder": "請詳細描述您在代碼中發現的問題，包括具體問題、潛在錯誤、風格問題或改進建議。",
@@ -971,11 +971,12 @@
     "start_by_generating_code": "從生成程式碼開始",
     "time_spent_seconds": "時間花費（秒）",
     "successful_completion": "成功完成",
+    
 
     "tab_practice": "練習",
-    "phase_1_generate_code": "Phase 1: 生成程式碼",
-    "phase_2_review_code": "Phase 2: 審查程式碼",
-    "phase_3_feedback": "Phase 3: 反饋",
+    "phase_1_generate_code": "階段 1: 生成程式碼",
+    "phase_2_review_code": "階段 2: 審查程式碼",
+    "phase_3_feedback": "階段 3: 反饋",
     "active":"積極的",
     "pending":"待辦的",
     "locked":"鎖定",
@@ -992,6 +993,7 @@
     "phase_completed_continue_below": "階段已完成，請繼續以下步驟",
     "follow_workflow_sequentially":"請按照工作流程順序進行操作",
     "code_generated_successfully": "程式碼生成成功！",
-    "complete_code_generation_first": "請先完成程式碼生成"
+    "complete_code_generation_first": "請先完成程式碼生成",
+    "generating_your_java_code_challenge": "正在生成您的Java程式碼挑戰..."
   }
 }

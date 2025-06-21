@@ -38,6 +38,15 @@ class ComparisonReportRenderer:
                     logger.debug("Successfully loaded practice_mode.css for comparison report renderer")
             else:
                 logger.warning(f"CSS file not found at: {css_file_path}")
+                
+            # Load tutorial CSS for enhanced styling
+            tutorial_css_path = os.path.join(current_dir, "..", "..", "static", "css", "error_explorer", "tutorial.css")
+            if os.path.exists(tutorial_css_path):
+                with open(tutorial_css_path, 'r', encoding='utf-8') as file:
+                    css_content = file.read()
+                    st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
+                    logger.debug("Successfully loaded tutorial.css for comparison report renderer")
+                    
         except Exception as e:
             logger.error(f"Error loading CSS for comparison report renderer: {str(e)}")
     

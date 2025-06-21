@@ -59,7 +59,7 @@ class UserPracticeTracker:
                     t('error_code'): error.get('error_code'),
                     t('error_name'): error.get('error_name'),                       
                     t('difficulty_level'): error.get('difficulty_level', 'medium'),
-                    t('category'): error.get('category', 'Unknown'),                       
+                    t('category'): error.get('category_name', 'Unknown'),                       
                     t('practice_count'): error.get('practice_count', 0),
                     t('total_attempts'): error.get('total_attempts', 0),
                     t('successful_completions'): error.get('successful_completions', 0),
