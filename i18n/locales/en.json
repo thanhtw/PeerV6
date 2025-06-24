@@ -157,7 +157,7 @@
     "tab_generate": "Generate Code",
     "tab_logs": "Logs",
     "tab_review": "Review Code",
-    "tab_tutorial": "Tutorial",
+    "tab_tutorial": "Tutorial Mode",
     "tutorial_available_after_login": "Tutorial is available after login, but not required to use the system",
     "tab_dashboard": "Dashboard", 
     "tab_error_explorer": "Error Explorer",
@@ -956,7 +956,7 @@
     "successful_completion": "Successful Completion",
 
 
-    "tab_practice": "Tab Practice",
+    "tab_practice": "Practice Mode",
     "phase_1_generate_code": "Phase 1: Generate Code",
     "phase_2_review_code": "Phase 2: Review Code",
     "phase_3_feedback": "Phase 3: Feedback",
@@ -979,7 +979,8 @@
     "complete_code_generation_first": "Complete code generation first to proceed with the review phase.",
     "processing_your_review": "Processing your review...",
     "review_submitted_successfully": "Review submitted successfully!",
-    "please_provide_at_least_5_words.": "Please provide a more detailed review with at least 5 words."
+    "please_provide_at_least_5_words.": "Please provide a more detailed review with at least 5 words.",
+    "master_again": "Master Again"
     
     
   }
