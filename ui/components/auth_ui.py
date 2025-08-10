@@ -91,7 +91,7 @@ class AuthUI:
             self._render_professional_registration_form()
         
         # Demo mode section
-        self._render_demo_section()
+        #self._render_demo_section()
         
         return st.session_state.auth["is_authenticated"]
 
