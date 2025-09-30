@@ -193,8 +193,6 @@ class PromptTemplate:
         accuracy_score_threshold: float,
         meaningful_score_threshold: float       
     ) -> str:
-        """Function-based template for review analysis prompt - FIXED: Use f-string consistently"""
-        # FIXED: Use f-string consistently instead of mixing with .format()
         base_prompt = f"""你是一位教育評估專家，負責分析學生的 Java 程式碼評審技能。
 
     任務：
@@ -212,50 +210,72 @@ class PromptTemplate:
     {student_review}
     ```
     評分閾值：
+      準確性閾值：{accuracy_score_threshold}
+      有意義閾值：{meaningful_score_threshold}
 
-    - 準確性閾值：{accuracy_score_threshold}（正確識別和定位）
-    - 有意義閾值：{meaningful_score_threshold}（解釋品質）
+    ⚠️ 嚴格評分與分類規則（沒有例外）：
+    A. 文字對齊門檻（Keyword/Location Gate）
+      1. 若學生評論未同時滿足下列任一組條件之一，則視為「未具體識別」：
+        - 含「錯誤類型關鍵詞」：例如 ==、equals、字串比較、邏輯錯誤、比較字串 等；
+        - 或含「位置線索」：例如 deleteStudent 方法、for 迴圈中的 if 判斷、該行條件式 等。
+      2. 一旦判定為「未具體識別」，必須：
+        - 準確度 <= 0.3
+        - 有意義性 <= 0.3
 
-    評估過程：
+    B. 臨界值保護（Threshold Guard）
+      - 不得將分數「恰好」設為門檻值（準確度 = {accuracy_score_threshold} 或 有意義性 = {meaningful_score_threshold}），
+      除非學生評論中同時明確包含：
+      (i) 錯誤類型（例如「使用 == 比較字串」），以及
+      (ii) 正確做法或簡要理由（例如「應改用 equals()，因為 == 比較參考位址」）。
 
-    1. 對於每個已知問題，確定學生是否解決了它
-    2. 為相關的學生評論評分（0.0-1.0 量表）：
-      - 準確性：他們識別問題和位置的正確程度
-      - 有意義：他們解釋為什麼這是問題的程度
-    3. 分類規則：問題「已識別」只有在兩個分數都達到閾值時
-      - 兩個分數 ≥ 閾值 → "Identified Problems"
-      - 否則 → "Missed Problems"
+    C. 無關或空洞評論（Irrelevance Rule）
+      - 若評論為重複字詞、感嘆語、無關描述、錯行號，或與已知問題無關，則將「學生的評論」視為「未提及」
 
-    回應格式：
-    ```json
+    D. 分類硬性規則（Mutual Exclusivity）
+      - IF (準確度 >= {accuracy_score_threshold} AND 有意義性 >= {meaningful_score_threshold}):
+        分類 = "已識別問題"（且僅能出現在「已識別問題」中）
+        ELSE:
+        分類 = "遺漏問題"（且僅能出現在「遺漏問題」中）
+      - 每個已知問題恰好出現一次，不得同時出現在兩個清單。
+    
+    E. 位置與原因一致性（Position/Reason Consistency）
+      - 若評論聲稱行號或位置，但與實際錯誤位置不符，視為「未具體識別」（套用 A-2 的評分上限與分類）。
+    F. 輸出前自檢（Pre-flight Check）
+      - 在輸出 JSON 前，逐條檢查是否符合 A–E 規則；若有衝突，優先遵守 A–E，並調整分數與分類。
+
+    回應格式（只允許以下 JSON 欄位與結構）：
     {{
-    "已識別問題": [
+      "已識別問題": [
         {{
-        "問題": "特定已知問題文字",
-        "學生評論": "學生的相關評論",
-        "準確度": 0.9,
-        "有意義性": 0.8,
-        "反饋": "對此識別的簡要回饋"
+          "問題": "已知問題描述",
+          "學生評論": "學生的評論",
+          "準確度": <必須 >= {accuracy_score_threshold}>,
+          "有意義性": <必須 >= {meaningful_score_threshold}>,
+          "反饋": "對此識別的回饋（解釋為何達標，並引用學生評論中的關鍵詞或位置線索）"
         }}
-    ],
-    "遺漏問題": [
+      ],
+      "遺漏問題": [
         {{
-        "問題": "特定已知問題文字 - 未解決",
-        "提示": "找到此問題的教育提示"
+          "問題": "已知問題描述",
+          "學生評論": "學生的嘗試（如果有）或「未提及」",
+          "準確度": <分數>,
+          "有意義性": <分數>,
+          "提示": "如何找到此問題的提示（指出實際方法/區塊/關鍵程式片段與正確概念）"
         }}
-    ],
-    "識別數量": 1,
-    "問題總數": {problem_count},
-    "識別百分比": 25.0,
-    "審查充分性": False,
-    "反饋": "整體評估與具體改進建議"
+      ],
+      "識別數量": <等於「已識別問題」陣列長度>,
+      "問題總數": {problem_count},
+      "識別百分比": <(識別數量/問題總數)*100>,
+      "審查充分性": <識別數量 == 問題總數>,
+      "反饋": "整體評估與具體改進建議（避免空話，需具體指向本次程式碼與評論）"
     }}
-    ```
 
-    重要要求：
-    - 每個問題恰好出現在「已識別」或「遺漏」中一次
-    - "Identified Count" 等於 "Identified Problems" 中的項目數
-    - 僅使用指定的 JSON 欄位
+    重要要求（再次強調）：
+    若未通過「文字對齊門檻」，不得評為「已識別問題」。
+    僅當評論同時指出「錯誤類型」與「正確做法／理由」，方可使用恰好等於門檻的分數；否則請給出明顯低於門檻的分數。
+    每個問題恰好出現在「已識別」或「遺漏」之一。
+    "識別數量" 必須等於 "已識別問題" 的項目數。
+    僅使用指定的 JSON 欄位。
     """
         
         language_instructions = get_llm_prompt_instructions(self.language)

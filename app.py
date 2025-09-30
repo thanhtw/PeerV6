@@ -191,25 +191,25 @@ def main():
     llm_manager = LLMManager()
     
     if "provider_selection" not in st.session_state:
-        st.session_state.provider_selection = "groq"    
+        st.session_state.provider_selection = "openai"    
     
-    api_key = os.getenv("GROQ_API_KEY", "")
+    api_key = os.getenv("OPEN_AI_API_KEY", "")
     if not api_key:
-        st.error("⚠️ No Groq API key found in environment variables. Please set GROQ_API_KEY in your .env file.")
-        st.info("To get a Groq API key:")
-        st.info("1. Visit https://console.groq.com/")
+        st.error("⚠️ No OpenAI API key found in environment variables. Please set OPEN_AI_API_KEY in your .env file.")
+        st.info("To get a Open API key:")
+        st.info("1. Visit https://api.openai.com/v1")
         st.info("2. Sign up and get your API key")
-        st.info("3. Add GROQ_API_KEY=your_key_here to your .env file")
+        st.info("3. Add OPEN_AI_API_KEY=your_key_here to your .env file")
         st.stop()
 
     # Configure provider
     try:
-        success = llm_manager.set_provider("groq", api_key)
+        success = llm_manager.set_provider("openai", api_key)
         if not success:
-            st.error("❌ Failed to configure Groq provider. Please check your configuration.")
+            st.error("❌ Failed to configure Openai provider. Please check your configuration.")
             st.stop()
         else:
-            logger.debug("✅ Groq provider configured successfully")
+            logger.debug("✅ OpenAI provider configured successfully")
     except Exception as e:
         st.error(f"❌ Error configuring LLM provider: {str(e)}")
         st.stop()
