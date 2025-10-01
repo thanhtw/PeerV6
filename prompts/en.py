@@ -182,82 +182,172 @@ class PromptTemplate:
         return base_prompt
 
     def create_review_analysis_prompt_template(
-        self,
-        code: str,
-        problem_count: int,
-        problems_text: str,
-        student_review: str,
-        accuracy_score_threshold: float,
-        meaningful_score_threshold: float       
-    ) -> str:
-        """Function-based template for review analysis prompt."""
-        # Use f-string consistently
-        base_prompt = f"""You are an educational assessment specialist analyzing a student's Java code review skills.
+    self,
+    code: str,
+    problem_count: int,
+    problems_text: str,
+    student_review: str,
+    accuracy_score_threshold: float,
+    meaningful_score_threshold: float       
+) -> str:
+      """Function-based template for review analysis prompt with strict evaluation."""
+      # Use f-string consistently
+      base_prompt = f"""You are an educational assessment specialist analyzing a student's Java code review skills. You must be extremely strict and precise in your evaluation.
 
-    TASK:
-    Analyze how effectively the student identified known issues during their code review.
+  TASK:
+  Analyze how effectively the student identified known issues during their code review. You must be very strict and accurate in scoring.
 
-    CODE UNDER REVIEW:
-    ```java
-    {code}
-    ```
-    KNOWN ISSUES ({problem_count} total):
-    {problems_text}
+  CODE UNDER REVIEW:
+  ```java
+  {code}
+  ```
 
-    STUDENT'S REVIEW:
-    ```
-    {student_review}
-    ```
-    SCORING THRESHOLDS:
+  KNOWN ISSUES ({problem_count} total):
+  {problems_text}
 
-    - Accuracy threshold: {accuracy_score_threshold} (correct identification and location)
-    - Meaningfulness threshold: {meaningful_score_threshold} (quality of explanation)
+  STUDENT'S REVIEW:
+  ```
+  {student_review}
+  ```
 
-    EVALUATION PROCESS:
+  SCORING THRESHOLDS:
+  - Accuracy threshold: {accuracy_score_threshold} (must correctly identify error type and location)
+  - Meaningfulness threshold: {meaningful_score_threshold} (must clearly explain why it's a problem)
 
-    1. For each known issue, determine if the student addressed it
-    2. Score relevant student comments (0.0-1.0 scale):
-      - Accuracy: How correctly they identified the issue and location
-      - Meaningfulness: How well they explained why it's problematic
-    3. Classification rule: Issue is "Identified" ONLY if both scores meet thresholds
-      - Both scores ≥ thresholds → "Identified Problems"
-      -Otherwise → "Missed Problems"
+  ⚠️ EXTREMELY STRICT SCORING AND CLASSIFICATION RULES (ABSOLUTELY NO VIOLATIONS):
 
-    RESPONSE FORMAT:
-    ```json
-    {{
+  A. Core Identification Requirements
+    1. A student comment can only be considered "specifically identified" if it meets ALL of the following:
+        a) Explicitly mentions error type keywords (e.g., "uses == to compare strings", "null pointer", "logic error")
+        b) Correctly points out the error location (method name, line number, or specific code segment)
+        c) Comment content substantially matches the known problem
+        
+    2. If a student comment fails ANY of these conditions, you MUST:
+        - Accuracy score: <= 0.3 (maximum 0.3, no higher)
+        - Meaningfulness score: <= 0.3 (maximum 0.3, no higher)
+        - Classification: MUST be placed in "Missed Problems"
+        - Must NOT be counted in "Identified Count"
+
+  B. Scoring Strictness (Extremely Rigorous)
+    1. Accuracy Scoring Scale (be very strict):
+        - 1.0: Perfectly identifies error type, location, and cause
+        - 0.8-0.9: Correctly identifies error type and location, but explanation slightly lacking
+        - 0.6-0.7: Error type correct, but location imprecise
+        - 0.4-0.5: Partially relevant but with obvious errors or omissions
+        - 0.1-0.3: Almost irrelevant or completely wrong
+        - 0.0: Completely irrelevant or blank
+    
+    2. Meaningfulness Scoring Scale (be very strict):
+        - 1.0: Clearly explains why it's a problem, describes potential impact or risks
+        - 0.8-0.9: Explains why it's a problem, but lacks depth
+        - 0.6-0.7: Simply states it's a problem, but lacks depth
+        - 0.4-0.5: Only points out location, no explanation of cause
+        - 0.1-0.3: Vague or repetitive comment
+        - 0.0: Completely meaningless or blank
+
+    3. Strictly Prohibit "Generous Scoring":
+        - Absolutely do NOT give "benefit of the doubt" scores
+        - When in doubt, give the lower score
+        - Better to underestimate than overestimate student capability
+
+  C. Threshold Protection
+    1. Scores can only meet or exceed thresholds if the student comment meets ALL of:
+        - Explicitly states error type (e.g., "uses == instead of equals()")
+        - Clearly explains why it's a problem (e.g., "== compares memory addresses, not content")
+        - Accurately identifies location (method name or line number)
+    
+    2. If the student comment lacks ANY of these elements:
+        - BOTH scores MUST be < threshold
+        - MUST be placed in "Missed Problems"
+
+  D. Invalid Comment Detection
+    A student comment is considered "not identified" if it falls into ANY of these categories:
+    - Repetitive words or exclamations (e.g., "there's a problem here", "wrong")
+    - Incorrect line number or method name
+    - Description completely unrelated to the known problem
+    - Vague generalities (e.g., "code quality is poor")
+    - Only says "there's an error" without specifying what error
+    
+    Handling:
+    - Accuracy: <= 0.2
+    - Meaningfulness: <= 0.2
+    - Classification: "Missed Problems"
+    - "Student Comment" field: Record as "Not specifically identified" or "Comment irrelevant"
+
+  E. Mandatory Classification Rules (Absolute Rules, Non-Negotiable)
+    1. Classification Determination (absolute rule, cannot be violated):
+        IF (Accuracy >= {accuracy_score_threshold} AND Meaningfulness >= {meaningful_score_threshold}):
+          → MUST be placed in "Identified Problems"
+          → MUST be counted in "Identified Count"
+        ELSE:
+          → MUST be placed in "Missed Problems"
+          → Must NOT be counted in "Identified Count"
+    
+    2. Mutual Exclusivity Principle:
+        - Each known problem must appear in exactly one list
+        - Absolutely cannot appear in both "Identified Problems" and "Missed Problems"
+        - Absolutely cannot omit any known problem
+
+  F. Position and Logic Consistency
+    1. If the student comment's claimed location doesn't match the actual error location:
+        - Accuracy: <= 0.3
+        - Classification: "Missed Problems"
+    
+    2. If the student comment's logic contradicts the known problem's error logic:
+        - Accuracy: <= 0.4
+        - Meaningfulness: <= 0.4
+        - Classification: "Missed Problems"
+
+  G. Pre-Output Validation (Self-Check Before Submitting)
+    Before outputting JSON, you MUST perform these checks:
+    1. Confirm every "Identified Problem" has scores >= threshold
+    2. Confirm every "Missed Problem" has at least one score < threshold
+    3. Confirm "Identified Count" = length of "Identified Problems" array
+    4. Confirm all {problem_count} known problems are classified
+    5. Confirm no problem appears in both lists
+
+  RESPONSE FORMAT (only these JSON fields and structure allowed):
+  {{
     "Identified Problems": [
-        {{
-        "Problem": "SPECIFIC KNOWN ISSUE TEXT",
-        "Student Comment": "STUDENT'S RELEVANT COMMENT",
-        "Accuracy": 0.9,
-        "Meaningfulness": 0.8,
-        "Feedback": "Brief feedback on this identification"
-        }}
+      {{
+        "Problem": "Complete description of the known issue",
+        "Student Comment": "Student's relevant comment (must substantially match)",
+        "Accuracy": <MUST be >= {accuracy_score_threshold}>,
+        "Meaningfulness": <MUST be >= {meaningful_score_threshold}>,
+        "Feedback": "Specifically explain how the student's comment correctly identified this issue, citing keywords and location clues they used"
+      }}
     ],
     "Missed Problems": [
-        {{
-        "Problem": "SPECIFIC KNOWN ISSUE TEXT - Not addressed",
-        "hint": "Educational hint for finding this issue"
-        }}
+      {{
+        "Problem": "Complete description of the known issue",
+        "Student Comment": "Student's attempt (if any) or 'Not mentioned' or 'Comment irrelevant'",
+        "Accuracy": <Actual score (MUST be < {accuracy_score_threshold} OR Meaningfulness < {meaningful_score_threshold})>,
+        "Meaningfulness": <Actual score>,
+        "hint": "Specific guidance: Tell the student which method/code segment to look at for this issue and what error pattern to watch for"
+      }}
     ],
-    "Identified Count": 1,
+    "Identified Count": <MUST equal the length of "Identified Problems" array, NOT the total number of student comments>,
     "Total Problems": {problem_count},
-    "Identified Percentage": 25.0,
-    "Review Sufficient": False,
-    "Feedback": "Overall assessment with specific improvement suggestions"
-    }}
-    ```
+    "Identified Percentage": <(Identified Count / Total Problems) * 100>,
+    "Review Sufficient": <Identified Count == Total Problems>,
+    "Feedback": "Overall assessment: Specifically point out which types of errors the student did well on and which types need improvement. Avoid empty words, give actionable suggestions."
+  }}
 
-    CRITICAL REQUIREMENTS:
-    - Each problem appears exactly once in either "Identified" or "Missed"
-    - "Identified Count" equals the number of items in "Identified Problems"
-    - Use only the specified JSON fields"""
-        
-        language_instructions = get_llm_prompt_instructions(self.language)
-        if language_instructions:
-            return f"{language_instructions}\n\n{base_prompt}"
-        return base_prompt
+  ⚠️ FINAL REMINDERS (Critical):
+  1. Better to be strict than lenient
+  2. If student comment is vague or unclear, give low scores
+  3. If student comment has wrong location, give low scores
+  4. If student comment doesn't explain the reason, Meaningfulness MUST be < threshold
+  5. "Identified Count" can ONLY count truly correctly identified problems
+  6. Scores below threshold MUST be placed in "Missed Problems"
+  7. Each known problem must be classified exactly once
+  8. You MUST validate all rules are followed before outputting
+  """
+      
+      language_instructions = get_llm_prompt_instructions(self.language)
+      if language_instructions:
+          return f"{language_instructions}\n\n{base_prompt}"
+      return base_prompt
 
     def create_feedback_prompt_template(
         self,
