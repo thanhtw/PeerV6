@@ -361,10 +361,10 @@ class TutorialUI:
                         # Side by side for compact view
                     example_col1, example_col2 = st.columns(2)
                     with example_col1:
-                        st.markdown("**❌ Problem:**")
+                        st.markdown(f"**❌ {t('problem')}:**")
                         st.code(examples["wrong_examples"][0][:200] + "..." if len(examples["wrong_examples"][0]) > 200 else examples["wrong_examples"][0], language="java")
                     with example_col2:
-                        st.markdown("**✅ Solution:**")
+                        st.markdown(f"**✅ {t('solution')}:**")
                         st.code(examples["correct_examples"][0][:200] + "..." if len(examples["correct_examples"][0]) > 200 else examples["correct_examples"][0], language="java")
             
             self._render_compact_practice_button(error, practice_stats)
@@ -688,8 +688,7 @@ class TutorialUI:
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-    def _render_compact_results_dashboard(self, workflow_state):
-        """REVISED: Compact results dashboard."""
+    def _render_compact_results_dashboard(self, workflow_state):       
         review_history = getattr(workflow_state, 'review_history', [])
         
         if review_history:
@@ -968,7 +967,7 @@ class TutorialUI:
             st.session_state.practice_workflow_state = updated_state
             st.session_state.practice_code_generated = True
             st.session_state.practice_workflow_status = "code_ready"
-            st.session_state.tutorial_workflow_phase = "review"  # ADDED: Auto-advance phase
+            st.session_state.tutorial_workflow_phase = "review" 
             
             if user_id:               
                 _log_user_interaction_tutorial(
@@ -1066,7 +1065,7 @@ class TutorialUI:
                     },
                     time_spent_seconds=0
                 )
-
+ 
             with st.spinner(f"🔄 {t('analyzing_your_review')}"):
                 start_time = time.time()
                 updated_state = self.workflow.submit_review(workflow_state, student_review)

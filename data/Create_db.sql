@@ -275,20 +275,20 @@ CREATE TABLE IF NOT EXISTS user_interactions (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
-CREATE VIEW user_practice_summary AS
-SELECT 
-    u.uid as user_id,
-    u.display_name_en,
-    u.display_name_zh,
-    COUNT(uep.id) as total_errors_practiced,
-    SUM(CASE WHEN uep.completion_status = 'completed' THEN 1 ELSE 0 END) as completed_errors,
-    SUM(CASE WHEN uep.completion_status = 'mastered' THEN 1 ELSE 0 END) as mastered_errors,
-    AVG(uep.best_accuracy) as average_accuracy,
-    SUM(uep.total_time_spent) as total_practice_time,
-    MAX(uep.last_practiced) as last_practice_session
-FROM users u
-LEFT JOIN user_error_practice uep ON u.uid = uep.user_id
-GROUP BY u.uid, u.display_name_en, u.display_name_zh;
+-- CREATE VIEW user_practice_summary AS
+-- SELECT 
+--     u.uid as user_id,
+--     u.display_name_en,
+--     u.display_name_zh,
+--     COUNT(uep.id) as total_errors_practiced,
+--     SUM(CASE WHEN uep.completion_status = 'completed' THEN 1 ELSE 0 END) as completed_errors,
+--     SUM(CASE WHEN uep.completion_status = 'mastered' THEN 1 ELSE 0 END) as mastered_errors,
+--     AVG(uep.best_accuracy) as average_accuracy,
+--     SUM(uep.total_time_spent) as total_practice_time,
+--     MAX(uep.last_practiced) as last_practice_session
+-- FROM users u
+-- LEFT JOIN user_error_practice uep ON u.uid = uep.user_id
+-- GROUP BY u.uid, u.display_name_en, u.display_name_zh;
 
 -- Verification and status
 SELECT 'Database tables created successfully!' as Status;

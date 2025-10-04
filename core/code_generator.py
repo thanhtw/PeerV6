@@ -13,6 +13,7 @@ from utils.code_utils import create_code_generation_prompt
 from utils.llm_logger import LLMInteractionLogger
 from utils.language_utils import t
 from data.database_error_repository import DatabaseErrorRepository
+import streamlit as st
 
 # Configure logging
 logging.basicConfig(
@@ -258,7 +259,9 @@ class CodeGenerator:
 
         try:
             # Metadata for logging
+            user_idd = st.session_state.auth.get("user_id")
             metadata = {
+                "user_id": user_idd,
                 f"{t('code_length')}": code_length,
                 f"{t('difficulty_level')}": difficulty_level,
                 f"{t('domain')}": domain,

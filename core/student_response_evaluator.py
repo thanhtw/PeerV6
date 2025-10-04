@@ -4,6 +4,7 @@ import logging
 import json
 from typing import List, Dict, Any, Optional, Tuple
 from langchain_core.language_models import BaseLanguageModel
+import streamlit as st
 
 from utils.code_utils import create_review_analysis_prompt, create_feedback_prompt, create_comparison_report_prompt, process_llm_response
 from utils.llm_logger import LLMInteractionLogger
@@ -79,7 +80,9 @@ class StudentResponseEvaluator:
             
             try:
                 # Metadata for logging
+                user_idd = st.session_state.auth.get("user_id")
                 metadata = {
+                    "user_id": user_idd,
                     t("code_length"): len(code_snippet.splitlines()),
                     t("known_problems_count"): len(known_problems),
                     t("student_review_length"): len(student_review.splitlines())
@@ -379,7 +382,9 @@ class StudentResponseEvaluator:
 
             #prompt += "\n\nIMPORTANT: Focus on helping the student make more meaningful comments. A good comment should clearly explain WHAT the issue is and WHY it's a problem, not just identify where it is. For example, instead of just 'Line 11: null issue', guide them to write 'Line 11: Object is accessed before null check, which could cause NullPointerException'."
 
+            user_idd = st.session_state.auth.get("user_id")
             metadata = {
+                "user_id": user_idd,
                 t("iteration_count"): iteration_count,
                 t("max_iterations"): max_iterations,
                 t("identified_count"):  review_analysis[t('identified_count')],

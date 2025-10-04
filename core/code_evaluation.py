@@ -10,6 +10,7 @@ import re
 import logging
 import json
 from typing import List, Dict, Any, Optional, Tuple
+import streamlit as st
 from langchain_core.language_models import BaseLanguageModel
 
 from utils.code_utils import create_evaluation_prompt, create_regeneration_prompt, process_llm_response
@@ -67,7 +68,9 @@ class CodeEvaluationAgent:
             
             # Log the evaluation
             if self.llm_logger:
+                user_idd = st.session_state.auth.get("user_id")
                 metadata = {
+                    "user_id": user_idd,
                     t("code_length"): len(code.splitlines()),
                     t("requested_errors_count"): len(requested_errors)
                 }
@@ -136,7 +139,9 @@ class CodeEvaluationAgent:
         )
         
         # Log the regeneration prompt
+        user_idd = st.session_state.auth.get("user_id")
         metadata = {
+            "user_id": user_idd,
              t("requested_errors"): [f"{error.get(t('type'), '').upper()} - {error.get(t('name'), '')}" for error in requested_errors],
              t("missing_errors"): missing_errors,
              t("found_errors"): found_errors,

@@ -26,15 +26,15 @@ class DatabaseSetup:
     def __init__(self):
         """Initialize database setup with configuration."""
         # Get database configuration from environment variables with defaults
-        self.db_host = os.getenv("DB_HOST", "localhost")
-        self.db_user = os.getenv("DB_USER", "root")  
-        self.db_password = os.getenv("DB_PASSWORD", "")
-        self.db_name = os.getenv("DB_NAME", "java_review_db")
-        self.db_port = int(os.getenv("DB_PORT", "3306"))
+        self.db_host = os.getenv("MYSQL_HOST", "localhost")
+        self.db_user = os.getenv("MYSQL_USER", "java_review_user")  
+        self.db_password = os.getenv("MYSQL_PASSWORD", "Thomas123!")
+        self.db_name = os.getenv("MYSQL_DATABASE", "java_review_db")
+        self.db_port = int(os.getenv("MYSQL_PORT", "3306"))
         
         # Application user credentials
-        self.app_user = os.getenv("APP_DB_USER", "java_review_user")
-        self.app_password = os.getenv("APP_DB_PASSWORD", "Thomas123!")
+        self.app_user = os.getenv("MYSQL_USER", "java_review_user")
+        self.app_password = os.getenv("MYSQL_PASSWORD", "Thomas123!")
         
         logger.debug(f"Database setup initialized:")
         logger.debug(f"  Host: {self.db_host}:{self.db_port}")
@@ -89,7 +89,7 @@ class DatabaseSetup:
             )
             
             if connection.is_connected():
-                db_info = connection.server_info
+                db_info = connection.server_info()
                 logger.debug(f"Successfully connected to MySQL Server version {db_info}")
                 cursor = connection.cursor()
                 cursor.execute("SELECT DATABASE();")
