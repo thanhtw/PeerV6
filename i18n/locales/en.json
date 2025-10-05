@@ -753,7 +753,7 @@
     "look_for_specific_error_practicing": "Look for the specific error you're practicing with. Provide detailed comments about what you find.",
     "guidance_for_improvement": "Guidance for Improvement",
     "enter_your_review_attempt": "Enter your review (Attempt {current_iteration}/{max_iterations})",
-    "example_review_format_line": "Example: Line 15: The array access arr[i] could cause IndexOutOfBoundsException because...",
+    "example_review_format_line": "Example: Line 15: IndexOutOfBoundsException: The array access arr[i] could cause IndexOutOfBoundsException because...",
     "submit_review_attempt": "Submit Review (Attempt {current_iteration})",
     "generate_new_code": "Generate New Code",
     "review_analysis_complete": "Review analysis complete!",
