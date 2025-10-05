@@ -223,7 +223,7 @@ class AuthUI:
                     )
                 with col_b:
                     display_name_zh = st.text_input(
-                        f"🇨🇳 {t('chinese_name')}",
+                        f" {t('chinese_name')}",
                         value=display_name,
                         key="reg_name_zh",
                         placeholder="王小明"

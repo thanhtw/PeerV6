@@ -89,7 +89,7 @@ class DatabaseSetup:
             )
             
             if connection.is_connected():
-                db_info = connection.server_info()
+                db_info = connection.get_server_info()
                 logger.debug(f"Successfully connected to MySQL Server version {db_info}")
                 cursor = connection.cursor()
                 cursor.execute("SELECT DATABASE();")
