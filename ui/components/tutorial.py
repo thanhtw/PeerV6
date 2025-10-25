@@ -599,7 +599,7 @@ class TutorialUI:
             """, unsafe_allow_html=True)
 
     def _render_tutorial_review_content(self):
-        """Compact tutorial review content."""
+        """Compact tutorial review content with enhanced feedback."""
         workflow_state = st.session_state.get("practice_workflow_state")
         
         if not workflow_state or not hasattr(workflow_state, 'code_snippet'):
@@ -608,7 +608,7 @@ class TutorialUI:
         
         st.markdown('<div class="compact-content">', unsafe_allow_html=True)
         
-        # Compact code display
+        # Display code
         code_to_display = workflow_state.code_snippet.clean_code
         
         st.markdown(f"""
@@ -620,19 +620,29 @@ class TutorialUI:
         
         st.code(add_line_numbers(code_to_display), language="java")
         
-        # Compact review input
+        # ✨ NEW: Display previous iteration feedback if exists
+        review_history = getattr(workflow_state, 'review_history', [])
+        if review_history and len(review_history) > 0:
+            latest_review = review_history[-1]
+            if hasattr(latest_review, 'analysis'):
+                self._render_tutorial_iteration_feedback(latest_review)
+        
+        # Review input
         self._render_tutorial_review_input_compact(workflow_state)
         
         st.markdown('</div>', unsafe_allow_html=True)
 
     def _render_tutorial_review_input_compact(self, workflow_state):
-        """REVISED: Compact review input."""
+        """REVISED: Compact review input with validation."""
         current_iteration = getattr(workflow_state, 'current_iteration', 1)
         max_iterations = getattr(workflow_state, 'max_iterations', 3)
         
         st.markdown(f"""
         <div class="review-input-header">
             <strong>✍️ {t('submit_your_analysis')} ({t('attempt')} {current_iteration}/{max_iterations})</strong>
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">
+                {t('minimum_required')}: 50 {t('characters')} | {t('include_line_references')}
+            </p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -641,20 +651,41 @@ class TutorialUI:
             "",
             height=200,
             key=review_key,
-            placeholder=f"🔍 {t('example_review_format_line')}",
+            placeholder=f"📝 {t('example_review_format_line')}:",
             label_visibility="collapsed"
         )
+        
+        # Show character count
+        if student_review:
+            char_count = len(student_review.strip())
+            word_count = len(student_review.strip().split())
+            
+            if char_count < 20:
+                count_color = "#dc3545"  # Red
+                count_icon = "⚠️"
+            else:
+                count_color = "#28a745"  # Green
+                count_icon = "✅"
+            
+            st.markdown(f"""
+            <div style="text-align: right; margin-top: 0.5rem; color: {count_color};">
+                {count_icon} {char_count} {t('characters')} | {word_count} {t('words')}
+            </div>
+            """, unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns([6, 6, 4])
         
         with col1:
             if st.button(f"🚀 {t('submit_review_button')}", key="submit_tutorial_review", type="primary"):
-                if student_review and student_review.strip():
-                    self._process_practice_review_with_tracking(student_review.strip())
-                    # Update phase after submission
-                    st.session_state.tutorial_workflow_phase = "review"
+                # ✨ NEW: Validate before processing
+                is_valid, error_message = self._validate_review_submission(student_review)
+                
+                if not is_valid:
+                    st.error(f"❌ {error_message}")
+                    st.info(f"💡 {t('please_add_more_details')}")
                 else:
-                    st.warning(f"⚠️ {t('please_enter_review')}")
+                    # Only process if validation passes
+                    self._process_practice_review_with_tracking(student_review.strip())
         
         with col2:
             if st.button(f"🔄 {t('generate_new_challenge')}", key="regenerate_tutorial"):
@@ -1045,44 +1076,95 @@ class TutorialUI:
             return None
 
     def _process_practice_review_with_tracking(self, student_review):
-        """Process the submitted practice review with step-by-step tracking."""
+        """Process the submitted practice review with enhanced validation and feedback."""
         try:
             user_id = st.session_state.auth.get("user_id") if "auth" in st.session_state else None
             workflow_state = st.session_state.practice_workflow_state
             practice_error = st.session_state.get("practice_error_data", {})
             error_code = practice_error.get(t('error_code'), '')
 
+            # ✨ STEP 1: Pre-validation (should already be done, but double-check)
+            is_valid, error_message = self._validate_review_submission(student_review)
+            if not is_valid:
+                st.error(f"❌ {error_message}")
+                return
+
+            # Log review submission
             if user_id:                         
                 _log_user_interaction_tutorial(
                     user_id=user_id,
                     interaction_category="tutorial",
                     interaction_type="submit_review",
                     success=True,                    
-                    details= {
+                    details={
                         "review_length": len(student_review),
                         "review_iteration": getattr(workflow_state, 'current_iteration', 1),
                         "word_count": len(student_review.split())
                     },
                     time_spent_seconds=0
                 )
- 
-            with st.spinner(f"🔄 {t('analyzing_your_review')}"):
+    
+            # ✨ STEP 2: Send to workflow for analysis
+            with st.spinner(f"🔄 {t('analyzing_your_review')}..."):
                 start_time = time.time()
-                updated_state = self.workflow.submit_review(workflow_state, student_review)
+                
+                try:
+                    updated_state = self.workflow.submit_review(workflow_state, student_review)
+                except Exception as workflow_error:
+                    logger.error(f"Workflow error: {str(workflow_error)}")
+                    st.error(f"❌ {t('error_processing_review')}: {str(workflow_error)}")
+                    return
+                
                 st.session_state.practice_workflow_state = updated_state
                 
+                # ✨ STEP 3: Extract and validate analysis results
                 review_sufficient = getattr(updated_state, 'review_sufficient', False)
                 current_iteration = getattr(updated_state, 'current_iteration', 1)
                 max_iterations = getattr(updated_state, 'max_iterations', 3)
                 
-                latest_review = updated_state.review_history[-1] if updated_state.review_history else None
-                analysis = latest_review.analysis if latest_review else {}
+                # Get latest review from history
+                review_history = getattr(updated_state, 'review_history', [])
+                # if not review_history:
+                #     logger.error("No review history found after submission")
+                #     st.error(f"❌ {t('error_processing_review')}: No analysis data returned")
+                #     return
+                
+                latest_review = review_history[-1]
+                analysis = latest_review.analysis if hasattr(latest_review, 'analysis') else {}
+                
+                # Validate analysis data
+                if not analysis:
+                    logger.error("Empty analysis data")
+                    st.error(f"❌ {t('error_processing_review')}: Analysis failed")
+                    return
+                
                 identified_count = analysis.get(t('identified_count'), 0)
                 total_problems = analysis.get(t('total_problems'), 0)
-                accuracy = (identified_count / total_problems * 100) if total_problems > 0 else 0     
-                time_spent_seconds = time.time() - start_time          
-
+                
+                # ✨ CRITICAL: Check if we have valid problem counts
+                if total_problems == 0:
+                    logger.error(f"Invalid analysis data: total_problems = 0. Full analysis: {analysis}")
+                    st.error(f"❌ {t('error_processing_review')}: Invalid analysis results")
+                    
+                    # Try to get error count from code snippet
+                    if hasattr(workflow_state, 'code_snippet'):
+                        code_snippet = workflow_state.code_snippet
+                        if hasattr(code_snippet, 'expected_error_count'):
+                            total_problems = code_snippet.expected_error_count
+                            logger.info(f"Recovered total_problems from code_snippet: {total_problems}")
+                    
+                    if total_problems == 0:
+                        st.warning("⚠️ Unable to determine expected error count. Please try regenerating the code.")
+                        return
+                
+                accuracy = (identified_count / total_problems * 100) if total_problems > 0 else 0
+                time_spent_seconds = time.time() - start_time
+                
+                logger.info(f"Review analysis: {identified_count}/{total_problems} errors found ({accuracy:.1f}%)")
+                
+                # ✨ STEP 4: Check if session is complete
                 if review_sufficient or current_iteration > max_iterations:
+                    # Complete the practice session
                     if user_id and error_code:
                         session_data = {
                             t('accuracy'): accuracy,
@@ -1094,17 +1176,27 @@ class TutorialUI:
                         self._update_badge_progress(user_id, practice_error, session_data)
                     
                     st.session_state.practice_workflow_status = "review_complete"
-                    st.session_state.tutorial_workflow_phase = "feedback"  # ADDED: Auto-advance to feedback
-                    st.success(f"✅ {t('review_analysis_complete')}")
+                    st.session_state.tutorial_workflow_phase = "feedback"
                     
-                    if user_id:                       
-                        passed = review_sufficient and identified_count == total_problems                        
-                        practice_error = st.session_state.get("practice_error_data", {})                        
+                    # ✨ STEP 5: Show completion message based on performance
+                    if identified_count == total_problems:
+                        st.success(f"🎉 {t('perfect_all_errors_found')}!")
+                        st.balloons()
+                    elif accuracy >= 80:
+                        st.success(f"✅ {t('great_job_most_errors_found')} ({accuracy:.1f}%)")
+                    elif accuracy >= 50:
+                        st.info(f"👍 {t('good_attempt_some_errors_found')} ({accuracy:.1f}%)")
+                    else:
+                        st.warning(f"📝 {t('keep_practicing_few_errors_found')} ({accuracy:.1f}%)")
+                    
+                    # Log completion
+                    if user_id:
+                        passed = review_sufficient and identified_count == total_problems
                         _log_user_interaction_tutorial(
                             user_id=user_id,
                             interaction_category="tutorial",
-                            interaction_type="review_analysis_complete",                            
-                            success=True,                           
+                            interaction_type="review_analysis_complete",
+                            success=True,
                             details={
                                 "accuracy": accuracy,
                                 "identified_count": identified_count,
@@ -1112,22 +1204,49 @@ class TutorialUI:
                                 "iterations_used": current_iteration,
                                 "review_sufficient": review_sufficient,
                                 "identified_correctly": identified_count == total_problems,
-                                "error_code": practice_error.get('error_code', ''),
-                                "final_review_text": student_review,
-                                "review_iterations": current_iteration,
-                                "analysis_data": analysis,
+                                "error_code": error_code,
                                 "passed": passed
                             },
                             time_spent_seconds=0
                         )
-                else:                    
-                    st.info(f"📝 {t('review_submitted_try_improve')}")
+                else:
+                    # ✨ STEP 6: Show interim feedback with hints
+                    remaining_attempts = max_iterations - current_iteration + 1
+                    missed_count = total_problems - identified_count
+                    
+                    # Get targeted guidance
+                    targeted_guidance = getattr(latest_review, 'targeted_guidance', None)
+                    
+                    # Display feedback based on accuracy
+                    if accuracy >= 80:
+                        st.info(
+                            f"🎯 {t('almost_there')}! {t('found')} {identified_count}/{total_problems}. "
+                            f"{t('try_again_for')} {missed_count} {t('more_errors')}. "
+                            f"({remaining_attempts} {t('attempts_remaining')})"
+                        )
+                    elif accuracy >= 50:
+                        st.warning(
+                            f"📈 {t('good_start')}! {t('found')} {identified_count}/{total_problems}. "
+                            f"{t('review_hints_below')}. "
+                            f"({remaining_attempts} {t('attempts_remaining')})"
+                        )
+                    else:
+                        st.warning(
+                            f"🔍 {t('keep_looking')}! {t('found')} {identified_count}/{total_problems}. "
+                            f"{t('read_hints_carefully')}. "
+                            f"({remaining_attempts} {t('attempts_remaining')})"
+                        )
+                    
+                    # Show hint preview if available
+                    if targeted_guidance:
+                        with st.expander(f"💡 {t('view_hints')}", expanded=True):
+                            st.markdown(targeted_guidance)
                 
                 time.sleep(1)
                 st.rerun()
-                
+                    
         except Exception as e:
-            logger.error(f"Error processing practice review: {str(e)}")            
+            logger.error(f"Error processing practice review: {str(e)}", exc_info=True)
             st.error(f"❌ {t('error_processing_review')}: {str(e)}")
 
     def _update_badge_progress(self, user_id: str, practice_error: Dict[str, Any], session_data: Dict[str, Any]):
@@ -1236,3 +1355,103 @@ class TutorialUI:
         st.session_state.practice_workflow_status = "setup"
         st.session_state.tutorial_workflow_phase = "generate"  # ADDED: Reset to generate phase
         st.rerun()
+
+    def _validate_review_submission(self, student_review: str) -> tuple[bool, str]:
+        """
+        Validate the student's review before sending to LLM.
+        
+        Args:
+            student_review: The review text submitted by the student
+            
+        Returns:
+            tuple: (is_valid, error_message)
+        """
+        # Check if review is empty
+        if not student_review or not student_review.strip():
+            return False, t("please_enter_review")
+        
+        # Check minimum length
+        review_length = len(student_review.strip())
+        minimum_length = 20
+        
+        if review_length < minimum_length:
+            return False, f"{t('review_minimum_length')}\n\n{t('current_length')}: {review_length} | {t('minimum_required')}: {minimum_length}"
+        
+        # Check for meaningful content (not just spaces or repeated characters)
+        words = student_review.strip().split()
+        if len(words) < 5:
+            return False, t("please_add_more_details")
+        
+        # Check if it contains line references (basic quality check)
+        has_line_reference = any(keyword in student_review.lower() for keyword in ['line', '行', 'l.', '第'])
+        if not has_line_reference:
+            return False, f"⚠️ {t('please_use_format_line_description')}\n\n{t('example')}: Line 5: Missing semicolon"
+        
+        return True, ""
+
+    def _render_tutorial_iteration_feedback(self, latest_review):
+        """
+        Display feedback from previous iteration to help user improve.
+        
+        Args:
+            latest_review: The latest review object with analysis and guidance
+        """
+        # Extract analysis data
+        analysis = latest_review.analysis if hasattr(latest_review, 'analysis') else {}
+        targeted_guidance = getattr(latest_review, 'targeted_guidance', None)
+        iteration_number = getattr(latest_review, 'iteration_number', 1)
+        
+        # Only show for iterations 2 and above (not the first attempt)
+        if iteration_number < 2:
+            return
+        
+        # Calculate metrics
+        identified_count = analysis.get(t("identified_count"), 0)
+        total_problems = analysis.get(t("total_problems"), 0)
+        accuracy = (identified_count / total_problems * 100) if total_problems > 0 else 0
+        
+        # Display performance metrics
+        st.markdown(f"""
+        <div class="tutorial-feedback-section">
+            <div class="feedback-header">
+                <span class="feedback-icon">📊</span>
+                <h4>{t("your_previous_attempt")}</h4>
+            </div>
+            <div class="feedback-metrics">
+                <div class="metric-box">
+                    <div class="metric-value">{identified_count}/{total_problems}</div>
+                    <div class="metric-label">{t("issues_found")}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">{accuracy:.1f}%</div>
+                    <div class="metric-label">{t("accuracy")}</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">{iteration_number}</div>
+                    <div class="metric-label">{t("attempt")}</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Display targeted guidance if available
+        if targeted_guidance:
+            st.markdown(f"""
+            <div class="tutorial-guidance-section">
+                <div class="guidance-header">
+                    <span class="guidance-icon">💡</span>
+                    <h4>{t("hints_for_improvement")}</h4>
+                </div>
+                <div class="guidance-content">
+                    {targeted_guidance}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Display status message based on performance
+        if accuracy < 50:
+            st.warning(f"⚠️ {t('keep_trying_many_errors_missed')}")
+        elif accuracy < 80:
+            st.info(f"📈 {t('good_progress_few_more_errors')}")
+        else:
+            st.success(f"🎯 {t('almost_there_check_carefully')}")
