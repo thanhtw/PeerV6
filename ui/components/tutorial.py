@@ -1081,7 +1081,7 @@ class TutorialUI:
                 total_problems = analysis.get(t('total_problems'), 0)
                 accuracy = (identified_count / total_problems * 100) if total_problems > 0 else 0     
                 time_spent_seconds = time.time() - start_time          
-                
+
                 if review_sufficient or current_iteration > max_iterations:
                     if user_id and error_code:
                         session_data = {

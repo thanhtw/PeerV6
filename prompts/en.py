@@ -222,11 +222,6 @@ class PromptTemplate:
         b) Correctly points out the error location (method name, line number, or specific code segment)
         c) Comment content substantially matches the known problem
         
-    2. If a student comment fails ANY of these conditions, you MUST:
-        - Accuracy score: <= 0.3 (maximum 0.3, no higher)
-        - Meaningfulness score: <= 0.3 (maximum 0.3, no higher)
-        - Classification: MUST be placed in "Missed Problems"
-        - Must NOT be counted in "Identified Count"
 
   B. Scoring Strictness (Extremely Rigorous)
     1. Accuracy Scoring Scale (be very strict):

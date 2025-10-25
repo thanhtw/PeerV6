@@ -311,7 +311,7 @@ class CodeDisplayUI:
         
         
         
-   
+
         if targeted_guidance and iteration_count > 1:
             st.markdown(f"""
                 <div class="enhanced-guidance-section">

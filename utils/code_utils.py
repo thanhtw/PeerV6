@@ -495,8 +495,8 @@ def create_regeneration_prompt(code: str, domain: str, missing_errors: List,
         return ""
 
 def create_review_analysis_prompt(code: str, known_problems: List[str], 
-                                 student_review: str, accuracy_threshold: float = 0.7,
-                                 meaningful_threshold: float = 0.6) -> str:
+                                 student_review: str, accuracy_threshold: float = 0.5,
+                                 meaningful_threshold: float = 0.5) -> str:
     """
     Create a prompt for analyzing a student's review.
     

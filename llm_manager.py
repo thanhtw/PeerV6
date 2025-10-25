@@ -2,18 +2,20 @@
 LLM Manager module for Java Peer Review Training System.
 
 This module provides the LLMManager class for handling model initialization,
-configuration, and management of OpenAI LLM provider with lazy connection testing.
+configuration, and management of OpenAI LLM provider with support for both
+Chat Completions API and Responses API (required for GPT-5-Codex).
 """
 
 import os
 import logging
 import time
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List, Union
 from dotenv import load_dotenv 
 
 # OpenAI integration
+from openai import OpenAI as OpenAIClient
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, BaseMessage
 OPENAI_AVAILABLE = True
 
 from langchain_core.language_models import BaseLanguageModel
@@ -25,10 +27,86 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+class ResponsesAPIWrapper:
+    """
+    Wrapper to make Responses API compatible with LangChain's BaseLanguageModel interface.
+    GPT-5-Codex requires the Responses API, not Chat Completions API.
+    """
+    
+    def __init__(self, client: OpenAIClient, model: str, temperature: float = 0.7, 
+                 max_tokens: int = 4096, **kwargs):
+        self.client = client
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.kwargs = kwargs
+        
+    def invoke(self, input_data: Union[str, List[BaseMessage]], **kwargs) -> str:
+        """
+        Invoke the Responses API with LangChain-compatible interface.
+        
+        Args:
+            input_data: Either a string or list of messages
+            
+        Returns:
+            String response from the model
+        """
+        # Convert input to proper format
+        if isinstance(input_data, str):
+            user_content = input_data
+        elif isinstance(input_data, list):
+            # Extract the last user message
+            user_messages = [msg for msg in input_data if hasattr(msg, 'content')]
+            user_content = user_messages[-1].content if user_messages else str(input_data)
+        else:
+            user_content = str(input_data)
+        
+        try:
+            # Call Responses API
+            response = self.client.responses.create(
+                model=self.model,
+                input=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": user_content
+                            }
+                        ]
+                    }
+                ],
+                text={
+                    "format": {"type": "text"},
+                    "verbosity": "medium"
+                },
+                tools=[],
+                store=False
+            )
+            
+            # Extract text from response
+            if hasattr(response, 'output') and response.output:
+                for output_item in response.output:
+                    if hasattr(output_item, 'content') and output_item.content:
+                        for content_item in output_item.content:
+                            if hasattr(content_item, 'text'):
+                                return content_item.text
+            
+            return str(response)
+            
+        except Exception as e:
+            logger.error(f"Error calling Responses API: {str(e)}")
+            raise
+    
+    def __call__(self, input_data: Union[str, List[BaseMessage]], **kwargs) -> str:
+        """Allow direct calling of the wrapper."""
+        return self.invoke(input_data, **kwargs)
+
+
 class LLMManager:
     """
     LLM Manager for handling model initialization, configuration and management.
-    Supports OpenAI LLM provider with lazy connection testing.
+    Supports OpenAI models via Chat Completions API and Responses API.
     """
     
     def __init__(self):
@@ -38,10 +116,18 @@ class LLMManager:
         # Provider settings - set to OpenAI
         self.provider = "openai"
         
-        # OpenAI settings - using GROQ_API_KEY as specified
+        # OpenAI settings
         self.openai_api_key = os.getenv("OPEN_AI_API_KEY", "")
         self.openai_api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
-        self.openai_default_model = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-4")
+        self.openai_default_model = os.getenv("OPENAI_DEFAULT_MODEL", "gpt-3.5-turbo")
+        
+        # Models that require Responses API
+        self.responses_api_models = [
+            "gpt-5-codex",
+            "gpt-5-pro",
+            "o3",
+            "o3-mini"
+        ]
         
         # Available OpenAI models
         self.openai_available_models = [
@@ -50,7 +136,12 @@ class LLMManager:
             "gpt-4o",
             "gpt-4o-mini",
             "gpt-3.5-turbo",
-            "gpt-3.5-turbo-16k"
+            "gpt-3.5-turbo-16k",
+            "gpt-5",
+            "gpt-5-mini",
+            "gpt-5-nano",
+            "gpt-5-codex",  # Responses API only
+            "gpt-5-pro"     # Responses API only
         ]
         
         # Track initialized models
@@ -59,11 +150,22 @@ class LLMManager:
         # Connection caching to avoid repeated tests
         self._connection_cache = {}
         self._cache_duration = 300  # 5 minutes
+        
+        # OpenAI client for Responses API
+        self._openai_client = None
+    
+    def _get_openai_client(self) -> OpenAIClient:
+        """Get or create OpenAI client for Responses API."""
+        if self._openai_client is None:
+            self._openai_client = OpenAIClient(
+                api_key=self.openai_api_key,
+                base_url=self.openai_api_base
+            )
+        return self._openai_client
     
     def set_provider(self, provider: str, api_key: str = None) -> bool:
         """
         Set the LLM provider to use and persist the selection.
-        No longer tests connection immediately - this is done lazily on first use.
         
         Args:
             provider: Provider name (must be 'openai')
@@ -86,7 +188,7 @@ class LLMManager:
         
         # Handle OpenAI setup
         if not OPENAI_AVAILABLE:
-            logger.error("OpenAI integration is not available. Please install langchain-openai package.")
+            logger.error("OpenAI integration is not available. Please install openai package.")
             return False
             
         # Validate and set API key
@@ -96,43 +198,31 @@ class LLMManager:
             
         if api_key:
             self.openai_api_key = api_key
-            os.environ["GROQ_API_KEY"] = api_key  # Store in GROQ_API_KEY as specified
+            os.environ["OPEN_AI_API_KEY"] = api_key
+            # Reset client to use new API key
+            self._openai_client = None
         
         # Clear connection cache when provider changes
         self._connection_cache = {}
         
-        # REMOVED: Connection testing - will be done on first LLM use
         logger.debug(f"Successfully configured OpenAI provider")
         return True    
     
     def _is_connection_cached(self) -> Tuple[bool, Optional[bool], Optional[str]]:
-        """
-        Check if we have a recent connection test result cached.
-        
-        Returns:
-            Tuple[bool, Optional[bool], Optional[str]]: (has_cache, is_connected, message)
-        """
+        """Check if we have a recent connection test result cached."""
         if not self._connection_cache:
             return False, None, None
             
         cache_time = self._connection_cache.get("timestamp", 0)
         current_time = time.time()
         
-        # Check if cache is still valid
         if current_time - cache_time < self._cache_duration:
             return True, self._connection_cache.get("connected", False), self._connection_cache.get("message", "")
         
-        # Cache expired
         return False, None, None
     
     def _cache_connection_result(self, connected: bool, message: str):
-        """
-        Cache the connection test result.
-        
-        Args:
-            connected: Whether connection was successful
-            message: Connection status message
-        """
+        """Cache the connection test result."""
         self._connection_cache = {
             "connected": connected,
             "message": message,
@@ -163,22 +253,21 @@ class LLMManager:
             return result
             
         if not OPENAI_AVAILABLE:
-            result = False, "OpenAI integration is not available. Please install langchain-openai package."
+            result = False, "OpenAI integration is not available. Please install openai package."
             self._cache_connection_result(*result)
             return result
             
         try:
-            # Use a minimal API call to test the connection
+            # Use ChatOpenAI for connection testing
             chat = ChatOpenAI(
                 api_key=self.openai_api_key,
-                model="gpt-3.5-turbo",  # Use the most efficient model for testing
+                model="gpt-3.5-turbo",
                 max_tokens=10
             )
             
             # Make a minimal API call
             response = chat.invoke([HumanMessage(content="test")])
             
-            # If we get here, the connection is successful
             result = True, f"Connected to OpenAI API successfully"
             logger.debug("OpenAI connection test successful")
             
@@ -190,14 +279,13 @@ class LLMManager:
                 result = False, f"Error connecting to OpenAI API: {error_message}"
             logger.debug(f"OpenAI connection test failed: {result[1]}")
         
-        # Cache the result
         self._cache_connection_result(*result)
         return result
 
     def initialize_model(self, model_name: str, model_params: Dict[str, Any] = None) -> Optional[BaseLanguageModel]:
         """
-        Initialize an OpenAI model with lazy connection testing.
-        Connection is only tested when the model is actually used.
+        Initialize an OpenAI model.
+        Automatically uses Chat Completions API or Responses API based on model.
         
         Args:
             model_name (str): Name of the model to initialize
@@ -208,20 +296,21 @@ class LLMManager:
         """
         return self._initialize_openai_model(model_name, model_params)
     
-    def _initialize_openai_model(self, model_name: str, model_params: Dict[str, Any] = None) -> Optional[BaseLanguageModel]:
+    def _initialize_openai_model(self, model_name: str, model_params: Dict[str, Any] = None) -> Optional[Union[ChatOpenAI, ResponsesAPIWrapper]]:
         """
-        Initialize an OpenAI model without immediate connection testing.
-        Uses simple ChatOpenAI instance for maximum reliability.
+        Initialize an OpenAI model using the appropriate API.
+        Uses Responses API for gpt-5-codex and similar models.
+        Uses Chat Completions API for other models.
         
         Args:
             model_name: Name of the model to initialize
             model_params: Model parameters
             
         Returns:
-            Initialized ChatOpenAI instance or None if initialization fails
+            Initialized model instance or None if initialization fails
         """
         if not OPENAI_AVAILABLE:
-            logger.error("OpenAI integration is not available. Please install langchain-openai package.")
+            logger.error("OpenAI integration is not available. Please install openai package.")
             return None
             
         if not self.openai_api_key:
@@ -233,14 +322,26 @@ class LLMManager:
             model_params = self._get_openai_default_params(model_name)
             
         try:
-            # Create ChatOpenAI directly for maximum reliability
-            llm = ChatOpenAI(
-                api_key=self.openai_api_key,
-                model=model_name,
-                temperature=model_params.get("temperature", 0.7),
-                max_tokens=model_params.get("max_tokens", 2048),
-                verbose=True
-            )
+            # Check if model requires Responses API
+            if model_name in self.responses_api_models:
+                logger.info(f"Initializing {model_name} with Responses API")
+                client = self._get_openai_client()
+                llm = ResponsesAPIWrapper(
+                    client=client,
+                    model=model_name,
+                    temperature=model_params.get("temperature", 0.7),
+                    max_tokens=model_params.get("max_tokens", 4096)
+                )
+            else:
+                # Use Chat Completions API for standard models
+                logger.info(f"Initializing {model_name} with Chat Completions API")
+                llm = ChatOpenAI(
+                    api_key=self.openai_api_key,
+                    model=model_name,
+                    temperature=model_params.get("temperature", 0.7),
+                    max_tokens=model_params.get("max_tokens", 2048),
+                    verbose=True
+                )
             
             logger.debug(f"Successfully initialized OpenAI model: {model_name}")
             return llm
@@ -277,7 +378,7 @@ class LLMManager:
         if model_name in model_aliases:
             model_name = model_aliases[model_name]
         
-        logger.debug(f"Using OpenAI model: {model_name}")
+        logger.info(f"Using OpenAI model: {model_name}")
         
         # Get temperature
         try:
@@ -312,11 +413,16 @@ class LLMManager:
         }
         
         # Adjust based on model capabilities and role
-        if "gpt-4" in model_name:
-            params["max_tokens"] = 4096  # GPT-4 models can handle more tokens
+        if "gpt-4" in model_name or "gpt-5" in model_name:
+            params["max_tokens"] = 4096  # GPT-4/5 models can handle more tokens
         
+        # Special settings for GPT-5-Codex (Responses API model)
+        if "gpt-5-codex" in model_name:
+            params["temperature"] = 0.3  # Lower temperature for coding tasks
+            params["max_tokens"] = 4096
+            params["reasoning_effort"] = "medium"  # Responses API parameter
         # Adjust temperature based on task type (inferred from context)
-        if "generative" in model_name.lower():
+        elif "generative" in model_name.lower():
             params["temperature"] = 0.8  # Higher creativity for generative tasks
         elif "review" in model_name.lower():
             params["temperature"] = 0.3  # Lower temperature for review tasks

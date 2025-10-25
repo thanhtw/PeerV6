@@ -763,7 +763,7 @@
     "look_for_specific_error_practicing": "尋找您正在練習的特定錯誤。提供您發現內容的詳細評論。",
     "guidance_for_improvement": "改進指導",
     "enter_your_review_attempt": "輸入您的審查（第{current_iteration}次嘗試，共{max_iterations}次）",
-    "example_review_format_line": "範例：第15行: IndexOutOfBoundsException: 陣列存取arr[i]可能導致IndexOutOfBoundsException，因為...",
+    "example_review_format_line": "範例：第15行: 邏輯錯誤: IndexOutOfBoundsException: 陣列存取arr[i]可能導致IndexOutOfBoundsException，因為...",
     "submit_review_attempt": "提交審查（第{current_iteration}次嘗試）",
     "generate_new_code": "生成新代碼",
     "review_analysis_complete": "審查分析完成！",
