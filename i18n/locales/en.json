@@ -999,7 +999,7 @@
     "review_hints_below": "Review the hints below to find more",
     "keep_looking": "Keep looking",
     "read_hints_carefully": "Read the hints carefully",
-    "review_minimum_length": "Please provide a more detailed review (minimum 50 characters)",
+    "review_minimum_length": "Please provide a more detailed review (minimum 20 characters)",
     "current_length": "Current length",
     "minimum_required": "Minimum required",
     "please_add_more_details": "Please add more details about the errors you found",
@@ -1007,7 +1007,8 @@
     "characters": "characters",
     "words": "words",
     "include_line_references": "Include line references (e.g., Line 5: ...)",
-    "view_hints": "View Hints for Improvement"
+    "view_hints": "View Hints for Improvement",
+    "please_use_format_line_description": "Please use the format: Line [number]: [description of the issue]"
 
     
     

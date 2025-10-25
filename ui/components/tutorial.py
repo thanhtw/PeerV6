@@ -641,7 +641,7 @@ class TutorialUI:
         <div class="review-input-header">
             <strong>✍️ {t('submit_your_analysis')} ({t('attempt')} {current_iteration}/{max_iterations})</strong>
             <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">
-                {t('minimum_required')}: 50 {t('characters')} | {t('include_line_references')}
+                {t('minimum_required')}: 20 {t('characters')} | {t('include_line_references')}
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -1385,7 +1385,7 @@ class TutorialUI:
         # Check if it contains line references (basic quality check)
         has_line_reference = any(keyword in student_review.lower() for keyword in ['line', '行', 'l.', '第'])
         if not has_line_reference:
-            return False, f"⚠️ {t('please_use_format_line_description')}\n\n{t('example')}: Line 5: Missing semicolon"
+            return False, f"⚠️ {t('please_use_format_line_description')}\n\n{t('example_review_format_line')}"
         
         return True, ""
 

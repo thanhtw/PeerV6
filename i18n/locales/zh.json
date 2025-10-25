@@ -1017,7 +1017,7 @@
     "review_hints_below": "查看下面的提示以找到更多",
     "keep_looking": "繼續尋找",
     "read_hints_carefully": "仔細閱讀提示",
-    "review_minimum_length": "請提供更詳細的評論（最少50個字符）",
+    "review_minimum_length": "請提供更詳細的評論（最少20個字符）",
     "current_length": "當前長度",
     "minimum_required": "最少需要",
     "please_add_more_details": "請添加更多關於您發現的錯誤的詳細信息",
@@ -1025,6 +1025,7 @@
     "characters": "字符",
     "words": "字",
     "include_line_references": "包含行號引用（例如：Line 5: ...）",
-    "view_hints": "查看改進提示"
+    "view_hints": "查看改進提示",
+    "please_use_format_line_description": "請使用「行號：錯誤描述」格式來列出您發現的錯誤。"
   }
 }
